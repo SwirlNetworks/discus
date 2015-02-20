@@ -1,5 +1,167 @@
-var Discus = require('./discus');
-var _super = require('./super');
+!function(e){if("object"==typeof exports)module.exports=e();else if("function"==typeof define&&define.amd)define(e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.Discus=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+
+},{}],2:[function(_dereq_,module,exports){
+var Backbone = _dereq_('backbone');
+
+function CreateClone() {
+	var root = this,
+		_sync = root.sync;
+		Module;
+	function Factory(){
+	}
+	Factory.prototype = root;
+	Factory.prototype.createClone = CreateClone;
+
+	Module = new Factory();
+
+	root.sync = function() {
+		if (Module.hasOwnProperty('sync')) {
+			return Module.sync.apply(Module, arguments);
+		}
+		return _sync.apply(root, arguments);
+	};
+}
+
+module.exports = CreateClone.apply(Backbone);
+
+},{}],3:[function(_dereq_,module,exports){
+_dereq_('./discus');
+_dereq_('./object');
+_dereq_('./view');
+_dereq_('./model');
+_dereq_('./screen');
+_dereq_('./super');
+
+module.exports = _dereq_('./discus');
+
+},{"./discus":2,"./model":4,"./object":5,"./screen":6,"./super":7,"./view":8}],4:[function(_dereq_,module,exports){
+var Discus = _dereq_('./discus');
+var _super = _dereq_('./super');
+
+Discus.Model = function() {
+	Backbone.Model.apply(this, arguments);
+	this.discusInitialize.apply(this, arguments);
+};
+Discus.Model.prototype = Backbone.Model.prototype;
+Discus.Model.extend = Backbone.Model.extend;
+
+Discus.Model = Discus.Model.extend({
+	_super: _super,
+
+	discusInitialize: function(data) {
+		this.___list_view_shared_views = {};
+		if (data && data.parent) {
+			console.error("Do not give models parents!!");
+			debugger;
+		}
+	},
+
+	set: function(data) {
+		if (data.toJSON || data.toArray) {
+			debugger; //jshint ignore: line
+		}
+		return Backbone.Model.prototype.set.apply(this, arguments);
+	},
+
+	fetch: function() {
+		var res = Backbone.Model.prototype.fetch.apply(this, arguments);
+
+		this.promise = res.promise;
+		this.trigger('fetch', res.promise());
+
+		return res;
+	}
+});
+
+module.exports = Discus.Model;
+
+},{"./discus":2,"./super":7}],5:[function(_dereq_,module,exports){
+var _ = _dereq_('underscore');
+var Discus = _dereq_('./discus');
+var _super = _dereq_('./super');
+
+// define base class
+Discus.Object = function() {
+	var self = this,
+		initParams;
+	this.cid = _.uniqueId('class');
+	initParams = arguments;
+	self.init = (function() {
+		var result = self.initialize.apply(self, initParams);
+		return function() { return result; };
+	}());
+};
+
+_.extend(Discus.Object.prototype, Discus.Events, {
+	initialize: function() { return this; },
+	_super: _super
+});
+
+Discus.Object.extend = Discus.Model.extend;
+
+module.exports = Discus.Object;
+
+},{"./discus":2,"./super":7}],6:[function(_dereq_,module,exports){
+var Discus = _dereq_('./discus');
+_dereq_('./view'); // depends on view
+
+Discus.Screen = Discus.View.extend({
+	discusInitialize: function() {
+		this._super('discusInitialize');
+	}
+});
+
+},{"./discus":2,"./view":8}],7:[function(_dereq_,module,exports){
+var Discus = _dereq_('./discus');
+
+// Find the next object up the prototype chain that has a
+// different implementation of the method.
+function findSuper(methodName, childObject) {
+	var object = childObject;
+	while (object[methodName] === childObject[methodName]) {
+		object = object.constructor.__super__;
+
+		if (!object) {
+			throw new Error('Class has no super method for', methodName, '. Remove the _super call to the non-existent method');
+		}
+	}
+	return object;
+}
+
+// The super method takes two parameters: a method name
+// and an array of arguments to pass to the overridden method.
+// This is to optimize for the common case of passing 'arguments'.
+function _super(methodName, args) {
+	// Keep track of how far up the prototype chain we have traversed,
+	// in order to handle nested calls to _super.
+	if (this._superCallObjects === undefined) { this._superCallObjects = {}; }
+	var oldSuperCallback = this._superCallObjects[methodName],
+		currentObject = oldSuperCallback || this,
+		parentObject  = findSuper(methodName, currentObject),
+		result;
+	this._superCallObjects[methodName] = parentObject;
+
+	try {
+		result = parentObject[methodName].apply(this, args || []);
+	} finally {
+		if (oldSuperCallback) {
+			this._superCallObjects[methodName] = oldSuperCallback;
+		} else {
+			delete this._superCallObjects[methodName];
+		}
+	}
+	return result;
+}
+
+_.each(["Collection", "Router"], function(klass) {
+	Discus[klass].prototype._super = discusSuper;
+});
+
+module.exports = _super;
+
+},{"./discus":2}],8:[function(_dereq_,module,exports){
+var Discus = _dereq_('./discus');
+var _super = _dereq_('./super');
 
 Discus.View = function() {
 	Backbone.View.apply(this, arguments);
@@ -293,3 +455,6 @@ Discus.View = Discus.View.extend({
 });
 
 module.exports = Discus.View;
+},{"./discus":2,"./super":7}]},{},[3])
+(3)
+});
