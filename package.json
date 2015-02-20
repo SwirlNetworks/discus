@@ -1,0 +1,32 @@
+{
+  "name": "discus",
+  "version": "1.0.0",
+  "description": "An extension to Backbone allowing more freedom to create complex single page webapps.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SwirlNetworks/discus"
+  },
+  "keywords": [
+    "backbone",
+    "javascript",
+    "mvvm",
+    "discus",
+    "marionette"
+  ],
+  "author": "Chris Vickery <chrisinajar@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/SwirlNetworks/discus/issues"
+  },
+  "homepage": "https://github.com/SwirlNetworks/discus",
+  "devDependencies": {
+    "gulp": "^3.8.11",
+    "gulp-browserify": "^0.5.1",
+    "gulp-plumber": "^0.6.6",
+    "gulp-rename": "^1.2.0"
+  }
+}
