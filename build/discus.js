@@ -1241,7 +1241,9 @@ module.exports = CreateClone.apply(Backbone);
 
 },{}],5:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus'),
-	async = _dereq_('async');
+	async = _dereq_('async'),
+	_ = _dereq_('underscore');
+
 _dereq_('./view');
 _dereq_('./model');
 
@@ -2725,7 +2727,7 @@ function _super(methodName, args) {
 	return result;
 }
 
-_.each(["Collection", "Router"], function(klass) {
+_dereq_('underscore').each(["Collection", "Router"], function(klass) {
 	Discus[klass].prototype._super = _super;
 });
 
@@ -2734,6 +2736,7 @@ module.exports = _super;
 },{"./discus":4}],11:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
+var _ = _dereq_('underscore');
 
 Discus.View = function() {
 	Backbone.View.apply(this, arguments);

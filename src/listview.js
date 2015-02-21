@@ -1,5 +1,7 @@
 var Discus = require('./discus'),
-	async = require('async');
+	async = require('async'),
+	_ = require('underscore');
+
 require('./view');
 require('./model');
 

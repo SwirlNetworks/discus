@@ -39,7 +39,7 @@ function _super(methodName, args) {
 	return result;
 }
 
-_.each(["Collection", "Router"], function(klass) {
+require('underscore').each(["Collection", "Router"], function(klass) {
 	Discus[klass].prototype._super = _super;
 });
 

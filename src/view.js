@@ -1,5 +1,6 @@
 var Discus = require('./discus');
 var _super = require('./super');
+var _ = require('underscore');
 
 Discus.View = function() {
 	Backbone.View.apply(this, arguments);

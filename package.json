@@ -1,10 +1,10 @@
 {
   "name": "discus",
-  "version": "1.0.0",
+  "version": "0.9.1",
   "description": "An extension to Backbone allowing more freedom to create complex single page webapps.",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "gulp build"
   },
   "repository": {
     "type": "git",
@@ -34,7 +34,5 @@
     "gulp-replace": "^0.5.3",
     "gulp-uglify": "^1.1.0"
   },
-  "browser": {
-    "build/discus.js"
-  }
+  "browser": "build/discus.js"
 }
