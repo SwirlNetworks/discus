@@ -1,8 +1,10 @@
 var Discus = require('./discus');
 var _super = require('./super');
 var _ = require('underscore');
+var Backbone = require('backbone');
 
 Discus.View = function() {
+	this.options = arguments[0];
 	Backbone.View.apply(this, arguments);
 	this.discusInitialize();
 };

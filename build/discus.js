@@ -2611,6 +2611,7 @@ module.exports = _dereq_('./discus');
 },{"./discus":4,"./listview":5,"./model":7,"./object":8,"./screen":9,"./super":10,"./view":11}],7:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
+var Backbone = _dereq_('backbone');
 
 Discus.Model = function() {
 	Backbone.Model.apply(this, arguments);
@@ -2737,8 +2738,10 @@ module.exports = _super;
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var _ = _dereq_('underscore');
+var Backbone = _dereq_('backbone');
 
 Discus.View = function() {
+	this.options = arguments[0];
 	Backbone.View.apply(this, arguments);
 	this.discusInitialize();
 };

@@ -1,5 +1,6 @@
 var Discus = require('./discus');
 var _super = require('./super');
+var Backbone = require('backbone');
 
 Discus.Model = function() {
 	Backbone.Model.apply(this, arguments);
