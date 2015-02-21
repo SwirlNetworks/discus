@@ -37,30 +37,78 @@ Discus.View = Discus.View.extend({
 		return timerID;
 	},
 
+	addChild: function(child) {
+		if (!this.__children) {
+			this.__children = {};
+		}
+		this.__children[child.cid] = child;
+
+		this.listenTo(child, "destroyed", function() {
+			this.removeChild(child);
+		});
+	},
+	removeChild: function(child) {
+		delete this.__children[child.cid];
+		this.stopListening(child, "destroyed");
+		if (child.parent().cid === this.cid) {
+			child.setParent();
+		}
+	},
 	hasParent: function() {
 		return !!this.__current_parent;
 	},
+	parent: function() {
+		return this.__current_parent;
+	},
 	setParent: function(parent) {
 		if (this.__current_parent) {
-			if (this.__current_parent.cid === parent.cid) {
+			if (parent && this.__current_parent.cid === parent.cid) {
 				return;
 			}
 			this.stopListening(this.__current_parent, "destroyed", this.remove);
+			this.stopListening(this.__current_parent, "rendered");
 		}
 
 		this.__current_parent = parent;
-		this.listenTo(this.__current_parent, "destroyed", this.remove);
+		if (parent) {
+			this.listenTo(this.__current_parent, "destroyed", this.remove);
 
-		if (this.options.renderTo) {
-			if (this.__current_parent) {
-				this.stopListening(this.__current_parent, "rendered");
+			if (parent.addChild == 'function') {
+				parent.addChild(this);
 			}
-			this.listenTo(this.__current_parent, "rendered", function() {
-				this.renderTo(this.__current_parent.$(this.options.renderTo));
-			});
+
+			if (this.options.renderTo) {
+				this.listenTo(this.__current_parent, "rendered", function() {
+					this.renderTo(this.__current_parent.$(this.options.renderTo));
+				});
+			}
 		}
 	},
+
+	checkRenderComplete: function() {
+		//if all data promises are done
+		//  && all children have been rendered
+		if (_.all(this.__readyPromises, function(promise) { return promise.isResolved(); })
+			&& _.all(this.__children, function(child) { return child.isRenderComplete; }))
+		{
+			this.trigger('renderComplete');
+			console.log('--- renderComplete: ', this);
+		}
+	},
+
+	readyAfter: function(promise) {
+		var self = this;
+		if (!this.__readyPromises) {
+			this.__readyPromises = [];
+		}
+		this.__readyPromises.push(promise);
+		promise.done(function() {
+			self.checkRenderComplete();
+		});
+	},
+
 	discusInitialize: function() {
+		this.__children = {};
 		if (this.options.parent) {
 			if (this.options.parent === window) {
 				console.error("Passed in parent: this when you meant to do parent: self");
@@ -72,46 +120,21 @@ Discus.View = Discus.View.extend({
 			console.error("renderTo does nothing without a parent!");
 			debugger; //jshint ignore:line
 		}
-	},
 
-	/* usePersistent - won't get wiped on partner change */
-	localStorage: function ( key, defaults, usePersistent ) {
-		var model, data, lsData;
-		if (!Modernizr.localstorage) { console.warn('LocalStorage is missing, expect odd behavior.'); return; }
-
-		/* Anonymous as it should not be exposed to anyone */
-		function getModel ( key, usePersistent ) {
-			if (!App.user) { return null; }
-			return App.user.storage.getItem( key, usePersistent );
+		if (!this.options.readyAfterModel && this.model && this.model.promise) {
+			try {
+				this.readyAfter(this.model.promise());
+			} catch (e) {
+				debugger;
+			}
 		}
 
-		if (this.__lsModelCache[ key ]) {
-			model = this.__lsModelCache[ key ];
-			data = model.toJSON();
-
-			data = _.defaults( data , defaults );
-
-			model.set( data );
-
-			return this.__lsModelCache[ key ];
+		if (!this.options.readyAfterCollection && this.collection) {
+			if (this.collection.promise) {
+				this.readyAfter(this.collection.promise());
+			}
+			this.listenTo(this.collection, "fetch fetchAll", this.readyAfter);
 		}
-
-		model = new LocalStorage({}, {
-			lsKey: key,
-			usePersistent: usePersistent
-		});
-		lsData = getModel( key, usePersistent );
-
-		/* This will add any newly defined defaults to the object, look up underscores defaults() function if confused */
-		lsData = _.defaults( lsData || {}, defaults );
-
-		if (lsData) {
-			/* This will always cause a Sync with local storage, but thats a cheap operation so we dont care */
-			model.set( lsData );
-		}
-		this.__lsModelCache[ key ] = model;
-
-		return model;
 	},
 
 	getTemplateData: function() {
@@ -270,25 +293,6 @@ Discus.View = Discus.View.extend({
 			e.stopPropagation();
 		}
 		return false;
-	},
-	reloadable: function(data) {
-		if (App.router.isReloaded()) {
-			if (App.router._reloadData.model) {
-				this.model = App.router._reloadData.model;
-			}
-			if (App.router._reloadData.collection) {
-				this.collection = App.router._reloadData.collection;
-			}
-			if (App.router._reloadData.stateModel) {
-				this.stateModel = App.router._reloadData.stateModel;
-			}
-
-			delete App.router._reloadData;
-
-		} else {
-			this.stateModel = new Discus.Model(data);
-
-		}
 	}
 });
 

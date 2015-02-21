@@ -40,7 +40,7 @@ function _super(methodName, args) {
 }
 
 _.each(["Collection", "Router"], function(klass) {
-	Discus[klass].prototype._super = discusSuper;
+	Discus[klass].prototype._super = _super;
 });
 
 module.exports = _super;

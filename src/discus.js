@@ -1,8 +1,8 @@
-var Backbone = require('backbone');
+var Backbone = require("backbone");
 
 function CreateClone() {
 	var root = this,
-		_sync = root.sync;
+		_sync = root.sync,
 		Module;
 	function Factory(){
 	}
@@ -17,6 +17,8 @@ function CreateClone() {
 		}
 		return _sync.apply(root, arguments);
 	};
+
+	return Module;
 }
 
 module.exports = CreateClone.apply(Backbone);
