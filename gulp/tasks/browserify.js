@@ -22,9 +22,6 @@ gulp.task('browserify', function() {
 		.pipe(rename('discus.js'))
 		.pipe(gulp.dest(config.dest))
 
-		.pipe(replace(/"backbone"/g, '"backbone.core"'))
-		.pipe(gulp.dest('/swirl/console/js/core/discus/'))
-
 		.pipe(uglify({
 		}))
 
