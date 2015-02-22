@@ -79,7 +79,6 @@ Discus.ListView = Discus.View.extend({
 	},
 
 	initialize: function() {
-		console.log("Using listview 2!");
 		var self = this;
 		// used by tables, mostly
 		this.sparse = {
@@ -754,16 +753,17 @@ Discus.ListView = Discus.View.extend({
 			return;
 		}
 		this.changedQueued = true;
-		_.delay(function() {
+		this.setTimeout(function() {
 			if (self.isRemoved) {
 				return;
 			}
 			self.changedQueued = false;
+			self.trigger("changed");
 			self.onChange();
+			self.checkRenderComplete();
 		});
 	},
 	onChange: function() {
-		this.trigger("changed");
 	},
 
 	sortBy: function(model) {
@@ -1039,10 +1039,22 @@ Discus.ListView = Discus.View.extend({
 		this.loadingPromise.done(function () {
 			self._resetCollection();
 		});
+		this.readyAfter(this.loadingPromise);
 		if (needsReset) {
 			this.renderModels();
 		}
 		return this.loadingPromise;
+	},
+	checkRenderComplete: function() {
+		if (this._d.isRendering || !this._d.hasData) {
+			return false;
+		}
+
+		if (this._super("checkRenderComplete", arguments)) {
+			this.stopListening(this, "change", this.checkRenderComplete);
+			return true;
+		}
+		return false;
 	},
 	setLoadingPromise: function(promise) {
 		debugger;

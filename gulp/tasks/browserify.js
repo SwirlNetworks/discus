@@ -12,7 +12,7 @@ gulp.task('browserify', function() {
 	gulp.src('src/main.js', { read: false })
 		.pipe(plumber())
 		.pipe(browserify({
-			external: ['backbone', 'underscore'],
+			external: ['backbone', 'underscore', 'jquery'],
 			standalone: 'Discus'
 		}))
 		.pipe(license('MIT', {
@@ -21,6 +21,9 @@ gulp.task('browserify', function() {
 
 		.pipe(rename('discus.js'))
 		.pipe(gulp.dest(config.dest))
+
+		.pipe(replace(/"backbone"/g, '"backbone.core"'))
+		.pipe(gulp.dest('/swirl/console/js/core/discus/'))
 
 		.pipe(uglify({
 		}))

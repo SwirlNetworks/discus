@@ -1,10 +1,11 @@
 var Discus = require('./discus');
 var _super = require('./super');
 var _ = require('underscore');
-var Backbone = require('backbone');
+var Backbone = require("backbone");
+var $ = require("jquery");
 
 Discus.View = function() {
-	this.options = arguments[0];
+
 	Backbone.View.apply(this, arguments);
 	this.discusInitialize();
 };
@@ -15,6 +16,40 @@ Discus.View = Discus.View.extend({
 	_super: _super,
 	
 	__lsModelCache: {},
+
+	_configure: function(options) {
+		this._super("_configure", arguments);
+
+		this.options = options;
+		_.defaults(this.options, _.isFunction(this.defaults) ? this.defaults() : this.defaults);
+
+		this.__children = {};
+
+		this._checkRenderComplete = this.checkRenderComplete;
+		this.checkRenderComplete = _.debounce(this.checkRenderComplete, 10);
+	},
+	discusInitialize: function() {
+		if (this.options.parent) {
+			if (this.options.parent === window) {
+				console.error("Passed in parent: this when you meant to do parent: self");
+				debugger; //jshint ignore:line
+				return;
+			}
+			this.setParent(this.options.parent);
+		} else if (this.options.renderTo) {
+			console.error("renderTo does nothing without a parent!");
+			debugger; //jshint ignore:line
+		}
+
+		if (this.model && _.isFunction(this.model.promise)) {
+			this.readyAfter(this.model.promise());
+			this.listenTo(this.model, "fetch", this.readyAfter);
+		}
+		if (this.collection && _.isFunction(this.collection.promise)) {
+			this.readyAfter(this.collection.promise());
+			this.listenTo(this.collection, "fetch fetchAll", this.readyAfter);
+		}
+	},
 
 	clearTimeout: function(timerID) {
 		if (this.__timerIDS) {
@@ -49,10 +84,11 @@ Discus.View = Discus.View.extend({
 		this.listenTo(child, "destroyed", function() {
 			this.removeChild(child);
 		});
+		this.listenTo(child, "renderComplete", this.checkRenderComplete);
 	},
 	removeChild: function(child) {
 		delete this.__children[child.cid];
-		this.stopListening(child, "destroyed");
+		this.stopListening(child);
 		if (child.parent().cid === this.cid) {
 			child.setParent();
 		}
@@ -76,9 +112,7 @@ Discus.View = Discus.View.extend({
 		if (parent) {
 			this.listenTo(this.__current_parent, "destroyed", this.remove);
 
-			if (parent.addChild == 'function') {
-				parent.addChild(this);
-			}
+			parent.addChild(this);
 
 			if (this.options.renderTo) {
 				this.listenTo(this.__current_parent, "rendered", function() {
@@ -89,55 +123,35 @@ Discus.View = Discus.View.extend({
 	},
 
 	checkRenderComplete: function() {
+		if (this.isRemoved) {
+			return false;
+		}
 		//if all data promises are done
 		//  && all children have been rendered
-		if (_.all(this.__readyPromises, function(promise) { return promise.isResolved(); })
-			&& _.all(this.__children, function(child) { return child.isRenderComplete; }))
+		if (this.isRenderComplete) {
+			return true;
+		}
+		if ((!this.__readyPromise || this.__readyPromise.isResolved())
+			&& _.all(this.__children, function(child) { return child._checkRenderComplete(); }))
 		{
+			this.isRenderComplete = true;
 			this.trigger('renderComplete');
 			console.log('--- renderComplete: ', this);
+			return true;
 		}
+		return false;
 	},
 
 	readyAfter: function(promise) {
 		var self = this;
-		if (!this.__readyPromises) {
-			this.__readyPromises = [];
+		if (!this.__readyPromise) {
+			this.__readyPromise = $.when(this.__readyPromise, promise);
+		} else {
+			this.__readyPromise = promise;
 		}
-		this.__readyPromises.push(promise);
 		promise.done(function() {
 			self.checkRenderComplete();
 		});
-	},
-
-	discusInitialize: function() {
-		this.__children = {};
-		if (this.options.parent) {
-			if (this.options.parent === window) {
-				console.error("Passed in parent: this when you meant to do parent: self");
-				debugger; //jshint ignore:line
-				return;
-			}
-			this.setParent(this.options.parent);
-		} else if (this.options.renderTo) {
-			console.error("renderTo does nothing without a parent!");
-			debugger; //jshint ignore:line
-		}
-
-		if (!this.options.readyAfterModel && this.model && this.model.promise) {
-			try {
-				this.readyAfter(this.model.promise());
-			} catch (e) {
-				debugger;
-			}
-		}
-
-		if (!this.options.readyAfterCollection && this.collection) {
-			if (this.collection.promise) {
-				this.readyAfter(this.collection.promise());
-			}
-			this.listenTo(this.collection, "fetch fetchAll", this.readyAfter);
-		}
 	},
 
 	getTemplateData: function() {
