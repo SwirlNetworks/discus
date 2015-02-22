@@ -142,7 +142,6 @@ Discus.View = Discus.View.extend({
 		{
 			this.isRenderComplete = true;
 			this.trigger('renderComplete');
-			console.log('--- renderComplete: ', this);
 			return true;
 		}
 		return false;
