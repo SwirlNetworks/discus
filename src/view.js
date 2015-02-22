@@ -4,8 +4,12 @@ var _ = require('underscore');
 var Backbone = require("backbone");
 var $ = require("jquery");
 
-Discus.View = function() {
+var needsConfigureShim = Discus.VERSION_ARRAY[0] >= 1 && Discus.VERSION_ARRAY[1] >= 1;
 
+Discus.View = function(options) {
+	if (needsConfigureShim) {
+		this.options = options;
+	}
 	Backbone.View.apply(this, arguments);
 	this.discusInitialize();
 };
@@ -18,7 +22,9 @@ Discus.View = Discus.View.extend({
 	__lsModelCache: {},
 
 	_configure: function(options) {
-		this._super("_configure", arguments);
+		if (!needsConfigureShim) {
+			this._super("_configure", arguments);
+		}
 
 		this.options = options;
 		_.defaults(this.options, _.isFunction(this.defaults) ? this.defaults() : this.defaults);
@@ -312,5 +318,12 @@ Discus.View = Discus.View.extend({
 		return false;
 	}
 });
+
+if (needsConfigureShim) {
+	Discus.View.prototype._ensureElement = function() {
+		this._configure(this.options || {});
+		return Backbone.View.prototype._ensureElement.apply(this, arguments);
+	}
+}
 
 module.exports = Discus.View;

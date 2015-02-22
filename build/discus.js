@@ -1215,6 +1215,7 @@ process.chdir = function (dir) {
 
 },{}],4:[function(_dereq_,module,exports){
 var Backbone = _dereq_("backbone");
+var _ = _dereq_("underscore");
 
 function CreateClone() {
 	var root = this,
@@ -1226,6 +1227,7 @@ function CreateClone() {
 	Factory.prototype.createClone = CreateClone;
 
 	Module = new Factory();
+	Module.VERSION_ARRAY = _(Backbone.VERSION.split('.')).map(function(val) { return parseInt(val); });
 
 	root.sync = function() {
 		if (Module.hasOwnProperty('sync')) {
@@ -2753,8 +2755,12 @@ var _ = _dereq_('underscore');
 var Backbone = _dereq_("backbone");
 var $ = _dereq_("jquery");
 
-Discus.View = function() {
+var needsConfigureShim = Discus.VERSION_ARRAY[0] >= 1 && Discus.VERSION_ARRAY[1] >= 1;
 
+Discus.View = function(options) {
+	if (needsConfigureShim) {
+		this.options = options;
+	}
 	Backbone.View.apply(this, arguments);
 	this.discusInitialize();
 };
@@ -2767,7 +2773,9 @@ Discus.View = Discus.View.extend({
 	__lsModelCache: {},
 
 	_configure: function(options) {
-		this._super("_configure", arguments);
+		if (!needsConfigureShim) {
+			this._super("_configure", arguments);
+		}
 
 		this.options = options;
 		_.defaults(this.options, _.isFunction(this.defaults) ? this.defaults() : this.defaults);
@@ -3061,6 +3069,13 @@ Discus.View = Discus.View.extend({
 		return false;
 	}
 });
+
+if (needsConfigureShim) {
+	Discus.View.prototype._ensureElement = function() {
+		this._configure(this.options || {});
+		return Backbone.View.prototype._ensureElement.apply(this, arguments);
+	}
+}
 
 module.exports = Discus.View;
 },{"./discus":4,"./super":10}]},{},[6])
