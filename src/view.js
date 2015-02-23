@@ -170,29 +170,6 @@ Discus.View = Discus.View.extend({
 			$.extend(data, {
 				stateModel: state
 			});
-
-			// if (!data.hasOwnProperty("state")) {
-			// 	// only create the blocker if we don't have a state value
-			// 	if (Object.defineProperty) {
-			// 		Object.defineProperty(data, 'state', {
-			// 			get: function () {
-			// 				throw new Error("Do not use state in templates. Use stateModel instead!");
-			// 			},
-			// 			set: function(value) {
-			// 				// This is called when a subclass edits the data.state before the template. We remove the error condition and return it to a normal variable
-			// 				// we also lock it as a normal variable, there is not really a good reason for this..
-			// 				Object.defineProperty(data, 'state', {
-			// 					value: value,
-			// 					writable: true,
-			// 					configurable: false
-			// 				});
-			// 				return value;
-			// 			},
-			// 			// we do this so we can redefine it later
-			// 			configurable: true
-			// 		});
-			// 	}
-			// }
 		}
 		
 		return data;
@@ -276,7 +253,7 @@ Discus.View = Discus.View.extend({
 			if (name === "_superCallObjects") { return; }
 			if (name === "cid") { return; }
 
-			if (App.isDev && self[name] && self[name] instanceof Discus.View && !self[name].isRemoved && typeof self[name].remove === 'function') {
+			if (Discus.isDev && self[name] && self[name] instanceof Discus.View && !self[name].isRemoved && typeof self[name].remove === 'function') {
 				console.warn("[GC] Should this view", cid, "have removed its sub-view", name, "?");
 			}
 			self[name] = null;
@@ -297,11 +274,6 @@ Discus.View = Discus.View.extend({
 			debugger; //jshint ignore:line
 		};
 		this.render.stack = stack;
-	},
-
-	modalForm: function(e) {
-		App.UI.modalForm(this.model);
-		return this.preventDefault(e);
 	},
 
 	preventDefault: function(e) {
