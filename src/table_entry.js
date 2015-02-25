@@ -1,5 +1,5 @@
-_ = require('underscore');
-Discus = require('./discus');
+var _ = require('underscore');
+var Discus = require('./discus');
 
 Discus.TableEntry = Discus.View.extend({
 	template: _.template([
