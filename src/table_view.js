@@ -1,6 +1,7 @@
 var Discus = require('./discus');
 var ListView = require('./list_view');
 var TableEntry = require('./table_entry');
+var $ = require('jquery');
 
 Discus.TableView = ListView.extend({
 	defaults: function() {
@@ -14,11 +15,12 @@ Discus.TableView = ListView.extend({
 			sparseClassName: 'tableView',
 			sparseLimit: 100,
 
-			viewClass: TableEntry
+			viewClass: Discus.TableEntry
 		});
 
 		return data;
-	}
+	},
+	tagName: 'table'
 });
 
 module.exports = Discus.TableView;

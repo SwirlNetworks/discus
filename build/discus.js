@@ -1244,7 +1244,8 @@ module.exports = CreateClone.apply(Backbone);
 },{}],5:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus'),
 	async = _dereq_('async'),
-	_ = _dereq_('underscore');
+	_ = _dereq_('underscore'),
+	$ = _dereq_('jquery');
 
 _dereq_('./view');
 _dereq_('./model');
@@ -1380,7 +1381,7 @@ Discus.ListView = Discus.View.extend({
 			);
 		}
 		// If we're already resolved, we'll instead rely on the below delay'd resetColleciton, rather than this one..
-		if (!this.loadingPromise.isResolved()) {
+		if (this.loadingPromise.state() !== "resolved") {
 			this.loadingPromise.done(function () {
 				self._resetCollection();
 			});
@@ -2305,7 +2306,7 @@ Discus.ListView = Discus.View.extend({
 	},
 
 	isLoading: function() {
-		return (this.collection.length === 0) && (!this.loadingPromise.isResolved());
+		return (this.collection.length === 0) && (this.loadingPromise.state() !== "resolved");
 	},
 	renderLoading: function() {
 		if (this.options.showLoadingAnimation) {
@@ -2771,6 +2772,7 @@ module.exports = Discus.TableView;
 var Discus = _dereq_('./discus');
 var ListView = _dereq_('./list_view');
 var TableEntry = _dereq_('./table_entry');
+var $ = _dereq_('jquery');
 
 Discus.TableView = ListView.extend({
 	defaults: function() {
@@ -2784,11 +2786,12 @@ Discus.TableView = ListView.extend({
 			sparseClassName: 'tableView',
 			sparseLimit: 100,
 
-			viewClass: TableEntry
+			viewClass: Discus.TableEntry
 		});
 
 		return data;
-	}
+	},
+	tagName: 'table'
 });
 
 module.exports = Discus.TableView;

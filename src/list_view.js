@@ -1,6 +1,7 @@
 var Discus = require('./discus'),
 	async = require('async'),
-	_ = require('underscore');
+	_ = require('underscore'),
+	$ = require('jquery');
 
 require('./view');
 require('./model');
@@ -136,7 +137,7 @@ Discus.ListView = Discus.View.extend({
 			);
 		}
 		// If we're already resolved, we'll instead rely on the below delay'd resetColleciton, rather than this one..
-		if (!this.loadingPromise.isResolved()) {
+		if (this.loadingPromise.state() !== "resolved") {
 			this.loadingPromise.done(function () {
 				self._resetCollection();
 			});
@@ -1061,7 +1062,7 @@ Discus.ListView = Discus.View.extend({
 	},
 
 	isLoading: function() {
-		return (this.collection.length === 0) && (!this.loadingPromise.isResolved());
+		return (this.collection.length === 0) && (this.loadingPromise.state() !== "resolved");
 	},
 	renderLoading: function() {
 		if (this.options.showLoadingAnimation) {
