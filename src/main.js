@@ -4,6 +4,7 @@ require('./view');
 require('./model');
 require('./screen');
 require('./super');
-require('./listview');
+require('./list_view');
+require('./table_view');
 
 module.exports = require('./discus');
