@@ -1,6 +1,6 @@
-Discus = require('./discus');
-ListView = require('./listview');
-TableEntry = require('./table_entry');
+var Discus = require('./discus');
+var ListView = require('./list_view');
+var TableEntry = require('./table_entry');
 
 Discus.TableView = ListView.extend({
 	defaults: function() {

@@ -2611,18 +2611,19 @@ Discus.ListView = Discus.View.extend({
 
 module.exports = Discus.ListView;
 
-},{"./discus":4,"./model":7,"./view":11,"async":1}],6:[function(_dereq_,module,exports){
+},{"./discus":4,"./model":7,"./view":13,"async":1}],6:[function(_dereq_,module,exports){
 _dereq_('./discus');
 _dereq_('./object');
 _dereq_('./view');
 _dereq_('./model');
 _dereq_('./screen');
 _dereq_('./super');
-_dereq_('./listview');
+_dereq_('./list_view');
+_dereq_('./table_view');
 
 module.exports = _dereq_('./discus');
 
-},{"./discus":4,"./listview":5,"./model":7,"./object":8,"./screen":9,"./super":10,"./view":11}],7:[function(_dereq_,module,exports){
+},{"./discus":4,"./list_view":5,"./model":7,"./object":8,"./screen":9,"./super":10,"./table_view":12,"./view":13}],7:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var Backbone = _dereq_("backbone");
@@ -2700,7 +2701,7 @@ Discus.Screen = Discus.View.extend({
 	// });
 });
 
-},{"./discus":4,"./view":11}],10:[function(_dereq_,module,exports){
+},{"./discus":4,"./view":13}],10:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 
 // Find the next object up the prototype chain that has a
@@ -2749,6 +2750,50 @@ _dereq_('underscore').each(["Collection", "Router"], function(klass) {
 module.exports = _super;
 
 },{"./discus":4}],11:[function(_dereq_,module,exports){
+var _ = _dereq_('underscore');
+var Discus = _dereq_('./discus');
+
+Discus.TableEntry = Discus.View.extend({
+	template: _.template([
+		'<td>It worked!</td>'
+	].join('')),
+
+	tagName: 'tr',
+
+	initialize: function() {
+		console.log('This is a table entry!');
+	}
+});
+
+module.exports = Discus.TableView;
+
+},{"./discus":4}],12:[function(_dereq_,module,exports){
+var Discus = _dereq_('./discus');
+var ListView = _dereq_('./list_view');
+var TableEntry = _dereq_('./table_entry');
+
+Discus.TableView = ListView.extend({
+	defaults: function() {
+		var data = this._super("defaults", arguments);
+
+		$.extend(data, {
+			sparse: true,
+			renderLimit: 12,
+			renderThrottle: 150,
+			sparseTagName: 'tbody',
+			sparseClassName: 'tableView',
+			sparseLimit: 100,
+
+			viewClass: TableEntry
+		});
+
+		return data;
+	}
+});
+
+module.exports = Discus.TableView;
+
+},{"./discus":4,"./list_view":5,"./table_entry":11}],13:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var _ = _dereq_('underscore');
