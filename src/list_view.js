@@ -1047,7 +1047,7 @@ Discus.ListView = Discus.View.extend({
 		return this.loadingPromise;
 	},
 	checkRenderComplete: function() {
-		if (this._d.isRendering || !this._d.hasData) {
+		if (this.isRemoved || this._d.isRendering || !this._d.hasData) {
 			return false;
 		}
 
