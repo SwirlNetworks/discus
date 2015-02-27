@@ -57,6 +57,13 @@ Discus.View = Discus.View.extend({
 		}
 	},
 
+	screenStateModel: function() {
+		if (this.parent()) {
+			return this.parent().screenStateModel();
+		}
+		return this.stateModel;
+	},
+
 	clearTimeout: function(timerID) {
 		if (this.__timerIDS) {
 			this.__timerIDS = _(this.__timerIDS).without(timerID);
