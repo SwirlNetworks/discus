@@ -34,6 +34,42 @@ Discus.Model = Discus.Model.extend({
 		this.trigger('fetch', res.promise());
 
 		return res;
+	},
+	getMetadata: function(field) {
+		return this.metadata[field];
+	},
+	value: function(field) {
+		var metadata = this.getMetadata(field);
+
+		if (metadata && typeof metadata.value === 'function') {
+			return metadata.value.apply(this, [field]);
+		}
+
+		return this.get(field);
+	},
+	displayValue: function(field) {
+		var metadata = this.getMetadata(field);
+
+		if (metadata && typeof metadata.displayValue === 'function') {
+			return metadata.displayValue.apply(this, [field]);
+		}
+
+		return this.value(field);
+	},
+	filterValue: function(field) {
+		var metadata = this.getMetadata(field);
+
+		if (metadata && typeof metadata.getFilterData === 'function') {
+			return metadata.getFilterData.apply(this, [field]);
+		}
+
+		return this.value(field);
+	},
+	metadata: {
+		title: {
+			name: "Title",
+			type: "string"
+		}
 	}
 });
 

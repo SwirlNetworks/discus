@@ -1,9 +1,10 @@
 require('./discus');
-require('./object');
-require('./view');
-require('./model');
-require('./screen');
 require('./super');
+require('./object');
+require('./model');
+require('./collection');
+require('./view');
+require('./screen');
 require('./list_view');
 require('./table_view');
 

@@ -1214,6 +1214,33 @@ process.chdir = function (dir) {
 };
 
 },{}],4:[function(_dereq_,module,exports){
+var Discus = _dereq_('./discus');
+_dereq_('./model');
+var _super = _dereq_('./super');
+var Backbone = _dereq_("backbone");
+
+Discus.Collection = function() {
+	Backbone.Collection.apply(this, arguments);
+	this.discusInitialize.apply(this, arguments);
+};
+Discus.Collection.prototype = Backbone.Collection.prototype;
+Discus.Collection.extend = Backbone.Collection.extend;
+
+Discus.Collection = Discus.Collection.extend({
+	_super: _super,
+	model: Discus.Model,
+
+	discusInitialize: function() {
+		// do nothing
+
+
+		// profit?
+	}
+});
+
+module.exports = Discus.Collection;
+
+},{"./discus":5,"./model":8,"./super":11}],5:[function(_dereq_,module,exports){
 var Backbone = _dereq_("backbone");
 var _ = _dereq_("underscore");
 
@@ -1241,7 +1268,7 @@ function CreateClone() {
 
 module.exports = CreateClone.apply(Backbone);
 
-},{}],5:[function(_dereq_,module,exports){
+},{}],6:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus'),
 	async = _dereq_('async'),
 	_ = _dereq_('underscore'),
@@ -2612,19 +2639,20 @@ Discus.ListView = Discus.View.extend({
 
 module.exports = Discus.ListView;
 
-},{"./discus":4,"./model":7,"./view":13,"async":1}],6:[function(_dereq_,module,exports){
+},{"./discus":5,"./model":8,"./view":14,"async":1}],7:[function(_dereq_,module,exports){
 _dereq_('./discus');
-_dereq_('./object');
-_dereq_('./view');
-_dereq_('./model');
-_dereq_('./screen');
 _dereq_('./super');
+_dereq_('./object');
+_dereq_('./model');
+_dereq_('./collection');
+_dereq_('./view');
+_dereq_('./screen');
 _dereq_('./list_view');
 _dereq_('./table_view');
 
 module.exports = _dereq_('./discus');
 
-},{"./discus":4,"./list_view":5,"./model":7,"./object":8,"./screen":9,"./super":10,"./table_view":12,"./view":13}],7:[function(_dereq_,module,exports){
+},{"./collection":4,"./discus":5,"./list_view":6,"./model":8,"./object":9,"./screen":10,"./super":11,"./table_view":13,"./view":14}],8:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var Backbone = _dereq_("backbone");
@@ -2661,12 +2689,48 @@ Discus.Model = Discus.Model.extend({
 		this.trigger('fetch', res.promise());
 
 		return res;
+	},
+	getMetadata: function(field) {
+		return this.metadata[field];
+	},
+	value: function(field) {
+		var metadata = this.getMetadata(field);
+
+		if (metadata && typeof metadata.value === 'function') {
+			return metadata.value.apply(this, [field]);
+		}
+
+		return this.get(field);
+	},
+	displayValue: function(field) {
+		var metadata = this.getMetadata(field);
+
+		if (metadata && typeof metadata.displayValue === 'function') {
+			return metadata.displayValue.apply(this, [field]);
+		}
+
+		return this.value(field);
+	},
+	filterValue: function(field) {
+		var metadata = this.getMetadata(field);
+
+		if (metadata && typeof metadata.getFilterData === 'function') {
+			return metadata.getFilterData.apply(this, [field]);
+		}
+
+		return this.value(field);
+	},
+	metadata: {
+		title: {
+			name: "Title",
+			type: "string"
+		}
 	}
 });
 
 module.exports = Discus.Model;
 
-},{"./discus":4,"./super":10}],8:[function(_dereq_,module,exports){
+},{"./discus":5,"./super":11}],9:[function(_dereq_,module,exports){
 var _ = _dereq_('underscore');
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
@@ -2692,17 +2756,17 @@ Discus.Object.extend = Discus.Model.extend;
 
 module.exports = Discus.Object;
 
-},{"./discus":4,"./super":10}],9:[function(_dereq_,module,exports){
+},{"./discus":5,"./super":11}],10:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 _dereq_('./view'); // depends on view
 
 Discus.Screen = Discus.View.extend({
-	// this.listenTo(this, "renderComplete", function() {
-	// 	do something
-	// });
+	screenStateModel: function() {
+		return this.stateModel;
+	}
 });
 
-},{"./discus":4,"./view":13}],10:[function(_dereq_,module,exports){
+},{"./discus":5,"./view":14}],11:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 
 // Find the next object up the prototype chain that has a
@@ -2750,29 +2814,43 @@ _dereq_('underscore').each(["Collection", "Router"], function(klass) {
 
 module.exports = _super;
 
-},{"./discus":4}],11:[function(_dereq_,module,exports){
+},{"./discus":5}],12:[function(_dereq_,module,exports){
 var _ = _dereq_('underscore');
 var Discus = _dereq_('./discus');
 
 Discus.TableEntry = Discus.View.extend({
-	template: _.template([
-		'<td>It worked!</td>'
-	].join('')),
-
 	tagName: 'tr',
 
 	initialize: function() {
-		console.log('This is a table entry!');
+		this._super('initialize', arguments);
+		this.table = this.options.parent;
+	},
+
+	render: function() {
+		var self = this;
+
+		this.$el.empty();
+
+		_(this.table.stateModel.get('columns')).each(function(column) {
+			self.renderColumn(column, self.model.displayValue(column));
+		});
+
+		this.redelegateEvents();
+	},
+
+	renderColumn: function(name, value) {
+		this.$el.append('<td>' + value + '</td>');
 	}
 });
 
 module.exports = Discus.TableView;
 
-},{"./discus":4}],12:[function(_dereq_,module,exports){
+},{"./discus":5}],13:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var ListView = _dereq_('./list_view');
 var TableEntry = _dereq_('./table_entry');
 var $ = _dereq_('jquery');
+var _ = _dereq_('underscore');
 
 Discus.TableView = ListView.extend({
 	defaults: function() {
@@ -2791,12 +2869,24 @@ Discus.TableView = ListView.extend({
 
 		return data;
 	},
-	tagName: 'table'
+	tagName: 'table',
+
+	initialize: function() {
+		if (!this.options.columns || !_.isArray(this.options.columns)) {
+			throw new Error("You must pass columns in to Talbe View");
+		}
+
+		this._super("initialize", arguments);
+
+		this.stateModel.set({
+			columns: this.options.columns
+		});
+	}
 });
 
 module.exports = Discus.TableView;
 
-},{"./discus":4,"./list_view":5,"./table_entry":11}],13:[function(_dereq_,module,exports){
+},{"./discus":5,"./list_view":6,"./table_entry":12}],14:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var _ = _dereq_('underscore');
@@ -2854,6 +2944,13 @@ Discus.View = Discus.View.extend({
 			this.readyAfter(this.collection.promise());
 			this.listenTo(this.collection, "fetch fetchAll", this.readyAfter);
 		}
+	},
+
+	screenStateModel: function() {
+		if (this.parent()) {
+			return this.parent().screenStateModel();
+		}
+		return this.stateModel;
 	},
 
 	clearTimeout: function(timerID) {
@@ -3097,6 +3194,6 @@ if (needsConfigureShim) {
 }
 
 module.exports = Discus.View;
-},{"./discus":4,"./super":10}]},{},[6])
-(6)
+},{"./discus":5,"./super":11}]},{},[7])
+(7)
 });
