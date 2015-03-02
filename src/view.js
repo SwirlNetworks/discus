@@ -47,12 +47,16 @@ Discus.View = Discus.View.extend({
 			debugger; //jshint ignore:line
 		}
 
-		if (this.model && _.isFunction(this.model.promise)) {
-			this.readyAfter(this.model.promise());
+		if (this.model) {
+			if (_.isFunction(this.model.promise)) {
+				this.readyAfter(this.model.promise());
+			}
 			this.listenTo(this.model, "fetch", this.readyAfter);
 		}
-		if (this.collection && _.isFunction(this.collection.promise)) {
-			this.readyAfter(this.collection.promise());
+		if (this.collection) {
+		 	if (_.isFunction(this.collection.promise)) {
+				this.readyAfter(this.collection.promise());
+			}
 			this.listenTo(this.collection, "fetch fetchAll", this.readyAfter);
 		}
 	},
@@ -92,6 +96,11 @@ Discus.View = Discus.View.extend({
 		if (!this.__children) {
 			this.__children = {};
 		}
+		if (!child) {
+			console.warn("Tried to add a non-existent child");
+			debugger;
+			return;
+		}
 		this.__children[child.cid] = child;
 
 		this.listenTo(child, "destroyed", function() {
@@ -100,6 +109,11 @@ Discus.View = Discus.View.extend({
 		this.listenTo(child, "renderComplete", this.checkRenderComplete);
 	},
 	removeChild: function(child) {
+		if (!child) {
+			console.warn("Tried to remove non-existent child");
+			debugger;
+			return;
+		}
 		delete this.__children[child.cid];
 		this.stopListening(child);
 		if (child.parent().cid === this.cid) {

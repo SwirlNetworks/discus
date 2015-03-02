@@ -21,6 +21,7 @@ Discus.TableView = ListView.extend({
 
 		return data;
 	},
+
 	tagName: 'table',
 
 	initialize: function() {
