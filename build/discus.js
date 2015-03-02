@@ -2958,6 +2958,37 @@ Discus.View = Discus.View.extend({
 		return this.stateModel;
 	},
 
+	createSharedStateModel: function(name, model) {
+		if (model instanceof Backbone.Model) {
+			// already a model
+		} else if (typeof model === 'object') {
+			model = new Backbone.Model(model);
+		} else {
+			model = new Backbone.Model();
+		}
+		// now that we have a proper model, do safety checks and store it
+		if (!this.__sharedStateModels) {
+			this.__sharedStateModels = {};
+		} else if (this.__sharedStateModels[name]) {
+			debugger;
+			console.warn('Overwriting shared state model %s with another Backbone Model', name);
+		}
+		this.__sharedStateModels[name] = model;
+
+		return model;
+	},
+
+	getSharedStateModel: function(name) {
+		if (this.__sharedStateModels && this.__sharedStateModels[name]) {
+			return this.__sharedStateModels[name];
+		}
+		if (this.parent()) {
+			return this.parent().getSharedStateModel(name);
+		} else {
+			return this.createSharedStateModel(name);
+		}
+	},
+
 	clearTimeout: function(timerID) {
 		if (this.__timerIDS) {
 			this.__timerIDS = _(this.__timerIDS).without(timerID);
