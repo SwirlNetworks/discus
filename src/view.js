@@ -110,7 +110,9 @@ Discus.View = Discus.View.extend({
 		return !!this.__current_parent;
 	},
 	parent: function() {
-		return this.__current_parent;
+		//when accessing parent during initializer, this.__current_parent is not set yet
+		// so return this.options.parent if it exists
+		return this.__current_parent || this.options.parent;
 	},
 	setParent: function(parent) {
 		if (this.__current_parent) {
