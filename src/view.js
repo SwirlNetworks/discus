@@ -214,8 +214,14 @@ Discus.View = Discus.View.extend({
 		
 		return data;
 	},
+	onBeforeRender: function() {
+		//Executed once BEFORE render has begun
+		//Override w/ custom handling
+	},
 	render: function() {
 		var data, state;
+
+		this.onBeforeRender();
 
 		data = this.getTemplateData();
 		// even if we use custom data getter we still might need state data to decide which template to use
@@ -240,7 +246,7 @@ Discus.View = Discus.View.extend({
 		return this;
 	},
 	onRender: function() {
-		//Executed once after render is finished
+		//Executed once AFTER render is finished
 		//Override w/ custom handling
 	},
 	renderTo: function(selector) {
