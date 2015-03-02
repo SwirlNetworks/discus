@@ -235,7 +235,13 @@ Discus.View = Discus.View.extend({
 
 		this.trigger('rendered');
 
+		this.onRender();
+
 		return this;
+	},
+	onRender: function() {
+		//Executed once after render is finished
+		//Override w/ custom handling
 	},
 	renderTo: function(selector) {
 		this.$el.appendTo(selector);
