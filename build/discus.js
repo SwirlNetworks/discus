@@ -2925,6 +2925,7 @@ Discus.View = Discus.View.extend({
 		this.checkRenderComplete = _.debounce(this.checkRenderComplete, 10);
 	},
 	discusInitialize: function() {
+		var self = this;
 		if (this.options.parent) {
 			if (this.options.parent === window) {
 				console.error("Passed in parent: this when you meant to do parent: self");
@@ -2949,6 +2950,70 @@ Discus.View = Discus.View.extend({
 			}
 			this.listenTo(this.collection, "fetch fetchAll", this.readyAfter);
 		}
+
+		if (this.modelEvents && this.model) {
+			this._bindEventsToModel(this.model, this.modelEvents);
+		}
+		if (this.collectionEvents && this.collection) {
+			this._bindEventsToModel(this.collection, this.collectionEvents);
+		}
+		this._setupStateModels();
+	},
+
+	_setupStateModels: function() {
+		var self = this,
+			rootModel = this.stateModel || this.getSharedStateModel();
+
+		if (this.stateModelEvents) {
+			_(this.stateModelEvents).chain()
+				.map(function(handler, eventName) {
+					if (typeof handler === 'object') {
+						return _(handler).map(function(subHandler, subEventName) {
+							return {
+								model: self.getSharedStateModel(eventName),
+								handler: subHandler,
+								eventName: subEventName
+							};
+						})
+					}
+					return {
+						model: rootModel,
+						handler: handler,
+						eventName: eventName
+					};
+				})
+				.flatten()
+				.groupBy(function(entry) {
+					return entry.model.cid;
+				})
+				.each(function(entry) {
+					var model = _(entry).first().model,
+
+						eventData = _(entry)
+							.chain()
+							.map(function(row) {
+								return [row.eventName, row.handler];
+							})
+							.object()
+							.value();
+
+					self._bindEventsToModel(model, eventData);
+				});
+		}
+	},
+
+	_bindEventsToModel: function(model, events) {
+		var self = this;
+		_(events).each(function(handler, eventName) {
+			if (typeof handler === 'string') {
+				handler = self[handler];
+			}
+			if (!_.isFunction(handler)) {
+				throw new Error("Could not find handler for event, " + eventName);
+			}
+			self.listenTo(model, eventName, handler);
+		});
+		return this;
 	},
 
 	screenStateModel: function() {
@@ -2979,6 +3044,9 @@ Discus.View = Discus.View.extend({
 	},
 
 	getSharedStateModel: function(name) {
+		if (name === 'SCREEN') {
+			return this.screenStateModel();
+		}
 		if (this.__sharedStateModels && this.__sharedStateModels[name]) {
 			return this.__sharedStateModels[name];
 		}
