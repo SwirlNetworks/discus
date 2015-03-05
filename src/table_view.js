@@ -34,6 +34,21 @@ Discus.TableView = ListView.extend({
 		this.stateModel.set({
 			columns: this.options.columns
 		});
+	},
+
+	renderHeader: function() {
+		// render header!
+		this.$('thead').remove();
+		var thead = $('<thead />'),
+			th = $('<th />');
+
+		this.$el.prepend(thead);
+
+		thead.append(th);
+
+		_(this.stateModel.get('columns')).each(function(column) {
+			th.append('<td>' + column + '</td>');
+		});
 	}
 });
 
