@@ -264,9 +264,15 @@ Discus.View = Discus.View.extend({
 		{
 			this.isRenderComplete = true;
 			this.trigger('renderComplete');
+			this.onRenderComplete();
 			return true;
 		}
 		return false;
+	},
+
+	onRenderComplete: function() {
+		//Executed once AFTER this view has finished rendering, all its subviews have finished rendering, and all
+		// KNOWN promises (this.model, this.collection, this.readyAfter( mySpecialPromise ) ) have resolved
 	},
 
 	readyAfter: function(promise) {
