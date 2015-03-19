@@ -16,7 +16,7 @@ Discus.Model = Discus.Model.extend({
 		this.___list_view_shared_views = {};
 		if (data && data.parent) {
 			console.error("Do not give models parents!!");
-			debugger;
+			debugger; //jshint ignore:line
 		}
 	},
 

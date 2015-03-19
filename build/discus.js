@@ -2570,6 +2570,11 @@ Discus.ListView = Discus.View.extend({
 	},
 
 	getSelected: function() {
+		if (this.isRemoved) {
+			// You didn't mean to call this.
+			debugger;
+			return [];
+		}
 		var self = this;
 
 		return this.collection.chain()
@@ -2671,7 +2676,7 @@ Discus.Model = Discus.Model.extend({
 		this.___list_view_shared_views = {};
 		if (data && data.parent) {
 			console.error("Do not give models parents!!");
-			debugger;
+			debugger; //jshint ignore:line
 		}
 	},
 
@@ -2881,6 +2886,21 @@ Discus.TableView = ListView.extend({
 
 		this.stateModel.set({
 			columns: this.options.columns
+		});
+	},
+
+	renderHeader: function() {
+		// render header!
+		this.$('thead').remove();
+		var thead = $('<thead />'),
+			th = $('<th />');
+
+		this.$el.prepend(thead);
+
+		thead.append(th);
+
+		_(this.stateModel.get('columns')).each(function(column) {
+			th.append('<td>' + column + '</td>');
 		});
 	}
 });
@@ -3186,8 +3206,14 @@ Discus.View = Discus.View.extend({
 		
 		return data;
 	},
+	onBeforeRender: function() {
+		//Executed once BEFORE render has begun
+		//Override w/ custom handling
+	},
 	render: function() {
 		var data, state;
+
+		this.onBeforeRender();
 
 		data = this.getTemplateData();
 		// even if we use custom data getter we still might need state data to decide which template to use
@@ -3207,7 +3233,13 @@ Discus.View = Discus.View.extend({
 
 		this.trigger('rendered');
 
+		this.onRender();
+
 		return this;
+	},
+	onRender: function() {
+		//Executed once AFTER render is finished
+		//Override w/ custom handling
 	},
 	renderTo: function(selector) {
 		this.$el.appendTo(selector);

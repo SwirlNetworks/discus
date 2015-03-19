@@ -1299,6 +1299,11 @@ Discus.ListView = Discus.View.extend({
 	},
 
 	getSelected: function() {
+		if (this.isRemoved) {
+			// You didn't mean to call this.
+			debugger;
+			return [];
+		}
 		var self = this;
 
 		return this.collection.chain()
