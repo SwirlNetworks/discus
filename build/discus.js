@@ -2355,6 +2355,7 @@ Discus.ListView = Discus.View.extend({
 		this.$el.addClass('noData');
 		this.renderHeader();
 		this.renderEmpty(text);
+		this.renderFooter();
 	},
 	renderEmpty: function(text){
 		// basically none of this function makes sense. Look at how noun is used...
@@ -3037,8 +3038,8 @@ Discus.View = Discus.View.extend({
 	},
 
 	screenStateModel: function() {
-		if (this.parent()) {
-			return this.parent().screenStateModel();
+		if (this.getParent()) {
+			return this.getParent().screenStateModel();
 		}
 		return this.stateModel;
 	},
@@ -3070,8 +3071,8 @@ Discus.View = Discus.View.extend({
 		if (this.__sharedStateModels && this.__sharedStateModels[name]) {
 			return this.__sharedStateModels[name];
 		}
-		if (this.parent()) {
-			return this.parent().getSharedStateModel(name);
+		if (this.getParent()) {
+			return this.getParent().getSharedStateModel(name);
 		} else {
 			return this.createSharedStateModel(name);
 		}
@@ -3088,6 +3089,23 @@ Discus.View = Discus.View.extend({
 			timerID;
 
 		timerID = setTimeout(function() {
+			this.__timerIDS = _(this.__timerIDS).without(timerID);
+			fn.apply(self, args);
+		});
+
+		if (!this.__timerIDS) {
+			this.__timerIDS = [timerID];
+		} else {
+			this.__timerIDS.push(timerID);
+		}
+
+		return timerID;
+	},
+	setInterval: function(fn, timeout, args) {
+		var self = this,
+			timerID;
+
+		timerID = setInterval(function() {
 			this.__timerIDS = _(this.__timerIDS).without(timerID);
 			fn.apply(self, args);
 		});
@@ -3125,14 +3143,14 @@ Discus.View = Discus.View.extend({
 		}
 		delete this.__children[child.cid];
 		this.stopListening(child);
-		if (child.parent().cid === this.cid) {
+		if (child.getParent().cid === this.cid) {
 			child.setParent();
 		}
 	},
 	hasParent: function() {
 		return !!this.__current_parent;
 	},
-	parent: function() {
+	getParent: function() {
 		//when accessing parent during initializer, this.__current_parent is not set yet
 		// so return this.options.parent if it exists
 		return this.__current_parent || this.options.parent;
@@ -3174,9 +3192,15 @@ Discus.View = Discus.View.extend({
 		{
 			this.isRenderComplete = true;
 			this.trigger('renderComplete');
+			this.onRenderComplete();
 			return true;
 		}
 		return false;
+	},
+
+	onRenderComplete: function() {
+		//Executed once AFTER this view has finished rendering, all its subviews have finished rendering, and all
+		// KNOWN promises (this.model, this.collection, this.readyAfter( mySpecialPromise ) ) have resolved
 	},
 
 	readyAfter: function(promise) {

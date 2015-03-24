@@ -1084,6 +1084,7 @@ Discus.ListView = Discus.View.extend({
 		this.$el.addClass('noData');
 		this.renderHeader();
 		this.renderEmpty(text);
+		this.renderFooter();
 	},
 	renderEmpty: function(text){
 		// basically none of this function makes sense. Look at how noun is used...
