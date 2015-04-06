@@ -69,6 +69,7 @@ Discus.ListView = Discus.View.extend({
 			// default is 32 views a second. this is pretty quick, all things considered..
 			renderLimit: 8, /* Maximum number of views to be rendered, if data appears to be missing, try upping this */
 			renderThrottle: 250,
+			renderAttached: false, // if we should render everything on the dom instead of removing ourselves first..
 
 			sparse: false,
 			sparseLimit: 20,
@@ -239,7 +240,6 @@ Discus.ListView = Discus.View.extend({
 
 		} else if (this._d.listCache.length === 0) {
 			this.showNoData();
-			this.renderFooter();
 		} else {
 
 			// render in all of the views that should be rendered. This is the heavy-ish task..
@@ -846,15 +846,19 @@ Discus.ListView = Discus.View.extend({
 				css: {
 					width: '100%',
 					height: '10000px',
-					position: 'relative'
+					position: 'relative',
+					display: 'block'
 				}
 			}).appendTo(this.$el);
+		} else {
+			sparse.holder.appendTo(this.$el);
 		}
 
 		scrollParent = nearestScrollableParent(sparse.holder.get(0));
 
 		sparse.holder.css({
-			height: 'auto'
+			height: '',
+			display: ''
 		});
 
 		if (!scrollParent) {
@@ -912,7 +916,11 @@ Discus.ListView = Discus.View.extend({
 			// round, floor
 			sparse.offset = ~~Math.max(0, sparse.offset);
 			// ceil
-			sparse.offset = Math.min(parseInt(this.collection.metadata.total) - this.options.sparseLimit, sparse.offset);
+			if (this.collection.metadata) {
+				sparse.offset = Math.min(parseInt(this.collection.metadata.total) - this.options.sparseLimit, sparse.offset);
+			} else {
+				sparse.offset = Math.min(parseInt(this.collection.length) - this.options.sparseLimit, sparse.offset);
+			}
 		}
 		if (sparse.offset !== currentOffset) {
 			// when scrolling down it's positive, up it's negative
@@ -946,7 +954,7 @@ Discus.ListView = Discus.View.extend({
 						_d.renderedViews = t;
 					}(rejects))
 				}
-				debugger;
+
 				this.resetSparsePosition();
 				_(rejects).each(function(view) {
 					view.detach();
@@ -1000,7 +1008,7 @@ Discus.ListView = Discus.View.extend({
 		if (this._d.renderedViews.length === 0) {
 			return;
 		}
-		if (!this.sparse.scrollParent) {
+		if (!this.sparse.scrollParent || !this.sparse.scrollParent.length) {
 			return this.generateSparseRenderTarget();
 		}
 		// this.sparse.holder.css({
@@ -1144,12 +1152,21 @@ Discus.ListView = Discus.View.extend({
 	*			UTILITY FUNCTIONS				*
 	*											*
 	********************************************/
+	// indexOf
 	// getRenderOffset
 	// getRenderTarget
 	// getStateModel
 	// getView
 	// isLoading
 
+	indexOf: function(model) {
+		var _d = this._d,
+			model = this.collection.get(model.id ? model.id : model),
+			sortingValue = this.sortBy(model),
+			cacheValue = { s: sortingValue, m: model };
+
+		return _.sortedIndex(_d.listCache, cacheValue, 's');
+	},
 	getRenderOffset: function() {
 		return this.sparse.offset;
 	},

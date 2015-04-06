@@ -18,7 +18,7 @@ Discus.View.extend = Backbone.View.extend;
 
 Discus.View = Discus.View.extend({
 	_super: _super,
-	
+
 	__lsModelCache: {},
 
 	_configure: function(options) {
@@ -33,6 +33,9 @@ Discus.View = Discus.View.extend({
 
 		this._checkRenderComplete = this.checkRenderComplete;
 		this.checkRenderComplete = _.debounce(this.checkRenderComplete, 10);
+	},
+	defaults: function() {
+		return {};
 	},
 	discusInitialize: function() {
 		var self = this;
@@ -84,7 +87,7 @@ Discus.View = Discus.View.extend({
 								handler: subHandler,
 								eventName: subEventName
 							};
-						})
+						});
 					}
 					return {
 						model: rootModel,
@@ -127,7 +130,7 @@ Discus.View = Discus.View.extend({
 	},
 
 	screenStateModel: function() {
-		if (this.getParent()) {
+		if (this.hasParent()) {
 			return this.getParent().screenStateModel();
 		}
 		return this.stateModel;
@@ -145,7 +148,7 @@ Discus.View = Discus.View.extend({
 		if (!this.__sharedStateModels) {
 			this.__sharedStateModels = {};
 		} else if (this.__sharedStateModels[name]) {
-			debugger;
+			debugger; //jshint ignore:line
 			console.warn('Overwriting shared state model %s with another Backbone Model', name);
 		}
 		this.__sharedStateModels[name] = model;
@@ -214,7 +217,7 @@ Discus.View = Discus.View.extend({
 		}
 		if (!child) {
 			console.warn("Tried to add a non-existent child");
-			debugger;
+			debugger; //jshint ignore:line
 			return;
 		}
 		this.__children[child.cid] = child;
@@ -227,7 +230,7 @@ Discus.View = Discus.View.extend({
 	removeChild: function(child) {
 		if (!child) {
 			console.warn("Tried to remove non-existent child");
-			debugger;
+			debugger; //jshint ignore:line
 			return;
 		}
 		delete this.__children[child.cid];
@@ -237,7 +240,7 @@ Discus.View = Discus.View.extend({
 		}
 	},
 	hasParent: function() {
-		return !!this.__current_parent;
+		return !!this.getParent();
 	},
 	getParent: function() {
 		//when accessing parent during initializer, this.__current_parent is not set yet
@@ -276,8 +279,8 @@ Discus.View = Discus.View.extend({
 		if (this.isRenderComplete) {
 			return true;
 		}
-		if ((!this.__readyPromise || this.__readyPromise.isResolved())
-			&& _.all(this.__children, function(child) { return child._checkRenderComplete(); }))
+		if ((!this.__readyPromise || this.__readyPromise.isResolved()) &&
+			_.all(this.__children, function(child) { return child._checkRenderComplete(); }))
 		{
 			this.isRenderComplete = true;
 			this.trigger('renderComplete');
@@ -451,7 +454,7 @@ if (needsConfigureShim) {
 	Discus.View.prototype._ensureElement = function() {
 		this._configure(this.options || {});
 		return Backbone.View.prototype._ensureElement.apply(this, arguments);
-	}
+	};
 }
 
 module.exports = Discus.View;

@@ -35,6 +35,16 @@ Discus.Model = Discus.Model.extend({
 
 		return res;
 	},
+	
+	save: function() {
+		var res = Backbone.Model.prototype.save.apply(this, arguments);
+
+		this.promise = res.promise;
+		this.trigger('save', res.promise());
+
+		return res;
+	},
+
 	getMetadata: function(field) {
 		return this.metadata[field];
 	},

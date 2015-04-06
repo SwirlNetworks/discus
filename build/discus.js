@@ -1340,6 +1340,7 @@ Discus.ListView = Discus.View.extend({
 			// default is 32 views a second. this is pretty quick, all things considered..
 			renderLimit: 8, /* Maximum number of views to be rendered, if data appears to be missing, try upping this */
 			renderThrottle: 250,
+			renderAttached: false, // if we should render everything on the dom instead of removing ourselves first..
 
 			sparse: false,
 			sparseLimit: 20,
@@ -1510,7 +1511,6 @@ Discus.ListView = Discus.View.extend({
 
 		} else if (this._d.listCache.length === 0) {
 			this.showNoData();
-			this.renderFooter();
 		} else {
 
 			// render in all of the views that should be rendered. This is the heavy-ish task..
@@ -2117,15 +2117,19 @@ Discus.ListView = Discus.View.extend({
 				css: {
 					width: '100%',
 					height: '10000px',
-					position: 'relative'
+					position: 'relative',
+					display: 'block'
 				}
 			}).appendTo(this.$el);
+		} else {
+			sparse.holder.appendTo(this.$el);
 		}
 
 		scrollParent = nearestScrollableParent(sparse.holder.get(0));
 
 		sparse.holder.css({
-			height: 'auto'
+			height: '',
+			display: ''
 		});
 
 		if (!scrollParent) {
@@ -2183,7 +2187,11 @@ Discus.ListView = Discus.View.extend({
 			// round, floor
 			sparse.offset = ~~Math.max(0, sparse.offset);
 			// ceil
-			sparse.offset = Math.min(parseInt(this.collection.metadata.total) - this.options.sparseLimit, sparse.offset);
+			if (this.collection.metadata) {
+				sparse.offset = Math.min(parseInt(this.collection.metadata.total) - this.options.sparseLimit, sparse.offset);
+			} else {
+				sparse.offset = Math.min(parseInt(this.collection.length) - this.options.sparseLimit, sparse.offset);
+			}
 		}
 		if (sparse.offset !== currentOffset) {
 			// when scrolling down it's positive, up it's negative
@@ -2217,7 +2225,7 @@ Discus.ListView = Discus.View.extend({
 						_d.renderedViews = t;
 					}(rejects))
 				}
-				debugger;
+
 				this.resetSparsePosition();
 				_(rejects).each(function(view) {
 					view.detach();
@@ -2271,7 +2279,7 @@ Discus.ListView = Discus.View.extend({
 		if (this._d.renderedViews.length === 0) {
 			return;
 		}
-		if (!this.sparse.scrollParent) {
+		if (!this.sparse.scrollParent || !this.sparse.scrollParent.length) {
 			return this.generateSparseRenderTarget();
 		}
 		// this.sparse.holder.css({
@@ -2415,12 +2423,21 @@ Discus.ListView = Discus.View.extend({
 	*			UTILITY FUNCTIONS				*
 	*											*
 	********************************************/
+	// indexOf
 	// getRenderOffset
 	// getRenderTarget
 	// getStateModel
 	// getView
 	// isLoading
 
+	indexOf: function(model) {
+		var _d = this._d,
+			model = this.collection.get(model.id ? model.id : model),
+			sortingValue = this.sortBy(model),
+			cacheValue = { s: sortingValue, m: model };
+
+		return _.sortedIndex(_d.listCache, cacheValue, 's');
+	},
 	getRenderOffset: function() {
 		return this.sparse.offset;
 	},
@@ -2696,6 +2713,16 @@ Discus.Model = Discus.Model.extend({
 
 		return res;
 	},
+	
+	save: function() {
+		var res = Backbone.Model.prototype.save.apply(this, arguments);
+
+		this.promise = res.promise;
+		this.trigger('save', res.promise());
+
+		return res;
+	},
+
 	getMetadata: function(field) {
 		return this.metadata[field];
 	},
@@ -2929,7 +2956,7 @@ Discus.View.extend = Backbone.View.extend;
 
 Discus.View = Discus.View.extend({
 	_super: _super,
-	
+
 	__lsModelCache: {},
 
 	_configure: function(options) {
@@ -2944,6 +2971,9 @@ Discus.View = Discus.View.extend({
 
 		this._checkRenderComplete = this.checkRenderComplete;
 		this.checkRenderComplete = _.debounce(this.checkRenderComplete, 10);
+	},
+	defaults: function() {
+		return {};
 	},
 	discusInitialize: function() {
 		var self = this;
@@ -2995,7 +3025,7 @@ Discus.View = Discus.View.extend({
 								handler: subHandler,
 								eventName: subEventName
 							};
-						})
+						});
 					}
 					return {
 						model: rootModel,
@@ -3038,7 +3068,7 @@ Discus.View = Discus.View.extend({
 	},
 
 	screenStateModel: function() {
-		if (this.getParent()) {
+		if (this.hasParent()) {
 			return this.getParent().screenStateModel();
 		}
 		return this.stateModel;
@@ -3056,7 +3086,7 @@ Discus.View = Discus.View.extend({
 		if (!this.__sharedStateModels) {
 			this.__sharedStateModels = {};
 		} else if (this.__sharedStateModels[name]) {
-			debugger;
+			debugger; //jshint ignore:line
 			console.warn('Overwriting shared state model %s with another Backbone Model', name);
 		}
 		this.__sharedStateModels[name] = model;
@@ -3125,7 +3155,7 @@ Discus.View = Discus.View.extend({
 		}
 		if (!child) {
 			console.warn("Tried to add a non-existent child");
-			debugger;
+			debugger; //jshint ignore:line
 			return;
 		}
 		this.__children[child.cid] = child;
@@ -3138,7 +3168,7 @@ Discus.View = Discus.View.extend({
 	removeChild: function(child) {
 		if (!child) {
 			console.warn("Tried to remove non-existent child");
-			debugger;
+			debugger; //jshint ignore:line
 			return;
 		}
 		delete this.__children[child.cid];
@@ -3148,7 +3178,7 @@ Discus.View = Discus.View.extend({
 		}
 	},
 	hasParent: function() {
-		return !!this.__current_parent;
+		return !!this.getParent();
 	},
 	getParent: function() {
 		//when accessing parent during initializer, this.__current_parent is not set yet
@@ -3187,8 +3217,8 @@ Discus.View = Discus.View.extend({
 		if (this.isRenderComplete) {
 			return true;
 		}
-		if ((!this.__readyPromise || this.__readyPromise.isResolved())
-			&& _.all(this.__children, function(child) { return child._checkRenderComplete(); }))
+		if ((!this.__readyPromise || this.__readyPromise.isResolved()) &&
+			_.all(this.__children, function(child) { return child._checkRenderComplete(); }))
 		{
 			this.isRenderComplete = true;
 			this.trigger('renderComplete');
@@ -3362,10 +3392,11 @@ if (needsConfigureShim) {
 	Discus.View.prototype._ensureElement = function() {
 		this._configure(this.options || {});
 		return Backbone.View.prototype._ensureElement.apply(this, arguments);
-	}
+	};
 }
 
 module.exports = Discus.View;
+
 },{"./discus":5,"./super":11}]},{},[7])
 (7)
 });
