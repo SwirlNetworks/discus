@@ -112,7 +112,7 @@ Discus.ListView = Discus.View.extend({
 
 		_.bindAll(this, 'refilter', 'resort', 'resetCollection', 'renderModels');
 
-		this.stateModel = new Discus.Model({});
+		this.stateModel = this.createSharedStateModel('listView');
 
 		if (!this.options.viewClass) {
 			throw new Error('Must specify a viewClass name before initialization when using ListView ' + this.options.viewClass);

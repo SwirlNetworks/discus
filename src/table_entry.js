@@ -26,4 +26,4 @@ Discus.TableEntry = Discus.View.extend({
 	}
 });
 
-module.exports = Discus.TableView;
+module.exports = Discus.TableEntry;

@@ -1383,7 +1383,7 @@ Discus.ListView = Discus.View.extend({
 
 		_.bindAll(this, 'refilter', 'resort', 'resetCollection', 'renderModels');
 
-		this.stateModel = new Discus.Model({});
+		this.stateModel = this.createSharedStateModel('listView');
 
 		if (!this.options.viewClass) {
 			throw new Error('Must specify a viewClass name before initialization when using ListView ' + this.options.viewClass);
@@ -2662,7 +2662,7 @@ Discus.ListView = Discus.View.extend({
 
 module.exports = Discus.ListView;
 
-},{"./discus":5,"./model":8,"./view":14,"async":1}],7:[function(_dereq_,module,exports){
+},{"./discus":5,"./model":8,"./view":15,"async":1}],7:[function(_dereq_,module,exports){
 _dereq_('./discus');
 _dereq_('./super');
 _dereq_('./object');
@@ -2675,7 +2675,7 @@ _dereq_('./table_view');
 
 module.exports = _dereq_('./discus');
 
-},{"./collection":4,"./discus":5,"./list_view":6,"./model":8,"./object":9,"./screen":10,"./super":11,"./table_view":13,"./view":14}],8:[function(_dereq_,module,exports){
+},{"./collection":4,"./discus":5,"./list_view":6,"./model":8,"./object":9,"./screen":10,"./super":11,"./table_view":14,"./view":15}],8:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var Backbone = _dereq_("backbone");
@@ -2799,7 +2799,7 @@ Discus.Screen = Discus.View.extend({
 	}
 });
 
-},{"./discus":5,"./view":14}],11:[function(_dereq_,module,exports){
+},{"./discus":5,"./view":15}],11:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 
 // Find the next object up the prototype chain that has a
@@ -2876,12 +2876,59 @@ Discus.TableEntry = Discus.View.extend({
 	}
 });
 
-module.exports = Discus.TableView;
+module.exports = Discus.TableEntry;
 
 },{"./discus":5}],13:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
+var $ = _dereq_('jquery');
+var _ = _dereq_('underscore');
+
+Discus.TableHeader = Discus.View.extend({
+	defaults: function() {
+		return {
+			flaoting: false
+		};
+	},
+	tagName: 'thead',
+
+	stateModelEvents: {
+		'table': {
+			'change:columns': 'render'
+		}
+	},
+
+	initialize: function() {
+		// convenience reference
+		this.table = this.options.parent;
+
+		// get the scoped table state model from the parent chain
+		this.stateModel = this.getSharedStateModel('table');
+	},
+
+	render: function() {
+		var self = this,
+			columns = this.stateModel.get('columns'),
+			tr = $('<tr />');
+
+
+		this.$el.empty();
+		this.$el.append(tr);
+
+		_(columns).each(function(col) {
+			tr.append('<th>' + col + '</th>');
+		});
+	}
+
+});
+
+module.exports = Discus.TableHeader;
+
+},{"./discus":5}],14:[function(_dereq_,module,exports){
+var Discus = _dereq_('./discus');
 var ListView = _dereq_('./list_view');
 var TableEntry = _dereq_('./table_entry');
+var TableHeader = _dereq_('./table_header');
+
 var $ = _dereq_('jquery');
 var _ = _dereq_('underscore');
 
@@ -2889,6 +2936,7 @@ Discus.TableView = ListView.extend({
 	defaults: function() {
 		var data = this._super("defaults", arguments);
 
+		// debugger;
 		$.extend(data, {
 			sparse: true,
 			renderLimit: 12,
@@ -2897,7 +2945,14 @@ Discus.TableView = ListView.extend({
 			sparseClassName: 'tableView',
 			sparseLimit: 100,
 
-			viewClass: Discus.TableEntry
+			viewClass: TableEntry,
+			headerViewClass: TableHeader,
+
+			// classname based options
+			table: true,
+			hover: false,
+			bordered: false,
+			striped: false
 		});
 
 		return data;
@@ -2905,37 +2960,56 @@ Discus.TableView = ListView.extend({
 
 	tagName: 'table',
 
+	stateModelEvents: {
+		'change:columns': 'resetCollection'
+	},
+
 	initialize: function() {
 		if (!this.options.columns || !_.isArray(this.options.columns)) {
 			throw new Error("You must pass columns in to Talbe View");
 		}
+		if (this.options.table) {
+			this.className += ' table';
+		}
+		if (this.options.hover) {
+			this.className += ' table-hover';
+		}
+		if (this.options.bordered) {
+			this.className += ' table-bordered';
+		}
+		if (this.options.striped) {
+			this.className += ' table-striped';
+		}
 
 		this._super("initialize", arguments);
 
+		this.$el.attr('class', this.className);
+
+		this.createSharedStateModel('table', this.stateModel);
+
 		this.stateModel.set({
 			columns: this.options.columns
+		});
+
+		this.tableHeader = new this.options.headerViewClass({
+			parent: this
 		});
 	},
 
 	renderHeader: function() {
 		// render header!
-		this.$('thead').remove();
-		var thead = $('<thead />'),
-			th = $('<th />');
+		// put the header at the very beginning again. It generally should already be there...
+		// we rely on lifecycle events for the view to render properly, so we only move the element for now
+		this.tableHeader.$el.prependTo(this.$el);
 
-		this.$el.prepend(thead);
-
-		thead.append(th);
-
-		_(this.stateModel.get('columns')).each(function(column) {
-			th.append('<td>' + column + '</td>');
-		});
+		// jk
+		this.tableHeader.render();
 	}
 });
 
 module.exports = Discus.TableView;
 
-},{"./discus":5,"./list_view":6,"./table_entry":12}],14:[function(_dereq_,module,exports){
+},{"./discus":5,"./list_view":6,"./table_entry":12,"./table_header":13}],15:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var _ = _dereq_('underscore');
