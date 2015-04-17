@@ -1,6 +1,6 @@
 {
   "name": "discus",
-  "version": "0.9.9",
+  "version": "0.10.0",
   "description": "An extension to Backbone allowing more freedom to create complex single page webapps.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
