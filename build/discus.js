@@ -1470,6 +1470,8 @@ Discus.ListView = Discus.View.extend({
 		// if we're on the dom...
 		if (this.$el.parent().length) {
 			this.rebuildDOM();
+		} else {
+			debugger;
 		}
 	},
 	// this deconstructs and reconstructs the DOM
@@ -1480,7 +1482,9 @@ Discus.ListView = Discus.View.extend({
 		var target = this.getRenderTarget();
 
 		// Start!
-		this.detachDOM();
+		if (!this.options.renderAttached) {
+			this.detachDOM();
+		}
 
 		// tear everything down first..
 		target.empty();
@@ -1960,6 +1964,9 @@ Discus.ListView = Discus.View.extend({
 			if (self.isRemoved) {
 				return;
 			}
+			if (self.options.sparse && !self.sparse.rowHeight) {
+				self.updateSparseSizing();
+			}
 			if (_d.renderID !== renderID) {
 				if (self.options.sparse) {
 					console.log("Completing canceled render...", viewOffset);
@@ -2223,7 +2230,7 @@ Discus.ListView = Discus.View.extend({
 					(function(t) {
 						rejects = _d.renderedViews;
 						_d.renderedViews = t;
-					}(rejects))
+					}(rejects));
 				}
 
 				this.resetSparsePosition();
@@ -2520,8 +2527,6 @@ Discus.ListView = Discus.View.extend({
 
 
 
-
-
 	/********************************************
 	*											*
 	*			SELECTION FUNCTIONS				*
@@ -2561,7 +2566,7 @@ Discus.ListView = Discus.View.extend({
 			currentRow = currentRow[0];
 		}
 
-		if (currentRow && !_.any(listCache, function(cache) { return cache.m.cid === currentRow.cid })) {
+		if (currentRow && !_.any(listCache, function(cache) { return cache.m.cid === currentRow.cid; })) {
 			currentRow = null;
 		}
 
