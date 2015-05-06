@@ -108,6 +108,7 @@ Discus.ListView = Discus.View.extend({
 			this.renderModels = _.debounce(this.renderModels);
 			this.selectedChanged = _.debounce(this.selectedChanged);
 			this.handleScroll = _.debounce(this.handleScroll, 10);
+			this.render = _.debounce(this.render);
 		}
 
 		_.bindAll(this, 'refilter', 'resort', 'resetCollection', 'renderModels');
@@ -199,15 +200,20 @@ Discus.ListView = Discus.View.extend({
 		// if we're on the dom...
 		if (this.$el.parent().length) {
 			this.rebuildDOM();
-		} else {
-			debugger;
 		}
+		// if we're not, we just kinda don't worry about it..
+		// we'll be rendered again next time we're added to the dom
 	},
 	// this deconstructs and reconstructs the DOM
 	// it can be kind of heavy, but generally is a good operation
 	// it's somewhat important to run this at least the first time we're actually attached to the dom
 	// (and all subsequent renders where we're attached to a fresh unmodified dom)
 	rebuildDOM: function() {
+		if (this.options.sparse) {
+			if (!this.sparse.scrollParent || !this.sparse.scrollParent.length) {
+				this.generateSparseRenderTarget();
+			}
+		}
 		var target = this.getRenderTarget();
 
 		// Start!
@@ -507,6 +513,16 @@ Discus.ListView = Discus.View.extend({
 			console.log("Rendering views based on offset,", offset);
 			renderList = _d.listCache.slice(offset, offset + this.options.sparseLimit);
 
+			if (_d.renderedViews.length === 0 && self.options.sparse && !self.sparse.rowHeight && renderList.length > 0) {
+				self.getView(renderList[0].m).renderTo(this.$el);
+				_d.renderedViews.push(self.getView(renderList[0].m));
+
+				this.updateSparseSizing();
+
+				_d.renderedViews = [];
+				self.getView(renderList[0].m)
+			}
+
 			this.resetSparsePosition();
 			// setup the height so that we fill up enough space..
 			this.$el.css({
@@ -692,9 +708,6 @@ Discus.ListView = Discus.View.extend({
 			if (err) { debugger; }
 			if (self.isRemoved) {
 				return;
-			}
-			if (self.options.sparse && !self.sparse.rowHeight) {
-				self.updateSparseSizing();
 			}
 			if (_d.renderID !== renderID) {
 				if (self.options.sparse) {
@@ -1012,11 +1025,15 @@ Discus.ListView = Discus.View.extend({
 		if (!this.options.sparse) {
 			return;
 		}
+		if (!this.sparse.scrollParent || !this.sparse.scrollParent.length) {
+			debugger;
+			this.generateSparseRenderTarget();
+			if (!this.sparse.scrollParent) {
+				return;
+			}
+		}
 		if (this._d.renderedViews.length === 0) {
 			return;
-		}
-		if (!this.sparse.scrollParent || !this.sparse.scrollParent.length) {
-			return this.generateSparseRenderTarget();
 		}
 		// this.sparse.holder.css({
 		// 	height: 'auto'
@@ -1038,6 +1055,8 @@ Discus.ListView = Discus.View.extend({
 
 			this.sparse.scrollHeightOffset = this.sparse.holder.offset().top - (this.sparse.scrollParent.offset() ? this.sparse.scrollParent.offset().top : 0);
 		}
+		// debugger;
+		// this.resetCollection();
 	},
 
 	addLoadingPromise: function(promise) {
