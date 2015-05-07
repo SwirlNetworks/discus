@@ -732,6 +732,7 @@ Discus.ListView = Discus.View.extend({
 			this.tableLoadingSpinner = null;
 		}
 		if (!lastView) {
+			this.getRenderTarget().empty();
 			return;
 		}
 
@@ -1026,7 +1027,6 @@ Discus.ListView = Discus.View.extend({
 			return;
 		}
 		if (!this.sparse.scrollParent || !this.sparse.scrollParent.length) {
-			debugger;
 			this.generateSparseRenderTarget();
 			if (!this.sparse.scrollParent) {
 				return;
