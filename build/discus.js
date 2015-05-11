@@ -1488,9 +1488,8 @@ Discus.ListView = Discus.View.extend({
 		var target = this.getRenderTarget();
 
 		// Start!
-		if (!this.options.renderAttached) {
-			this.detachDOM();
-		}
+		// renderAttached is handled within detach/attach dom...
+		this.detachDOM();
 
 		// tear everything down first..
 		target.empty();
@@ -1511,10 +1510,6 @@ Discus.ListView = Discus.View.extend({
 			this.sparse.holder.attr('class', 'list_view_slider ' + this.options.sparseClassName);
 		}
 
-		if (this.options.renderAttached) {
-			this.attachDOM();
-		}
-
 		if (this.isLoading()) {
 			this._d.loadingSpinnerShown = true;
 			this.renderLoading();
@@ -1532,9 +1527,7 @@ Discus.ListView = Discus.View.extend({
 			this.renderFooter();
 		}
 
-		if (!this.options.renderAttached) {
-			this.attachDOM();
-		}
+		this.attachDOM();
 
 		// Done!
 	},
@@ -1603,7 +1596,7 @@ Discus.ListView = Discus.View.extend({
 			return;
 		}
 
-		if (this.placeHolder.parent().length) {
+		if (this.placeHolder && this.placeHolder.parent().length) {
 			this.$el.insertAfter(this.placeHolder);
 		} else {
 			///TODO This case doesn't render properly!?
@@ -1927,7 +1920,7 @@ Discus.ListView = Discus.View.extend({
 							if (viewOffset === 0) {
 								_d.renderedViews[viewOffset].$el.prependTo(target);
 							} else {
-								_d.renderedViews[viewOffset].$el.insertAfter(_d.renderedViews[viewOffset-1].$el);
+								_d.renderedViews[viewOffset].$el.insertAfter(_d.renderedViews[viewOffset-1].lastElement());
 							}
 							// render is done below, so you don't need to here
 							return;
@@ -1985,7 +1978,7 @@ Discus.ListView = Discus.View.extend({
 					console.log("Completing canceled render...", viewOffset);
 				}
 				return;
-			}
+			}	
 			_d.isRendering = false;
 			self.removeFooter();
 			self.renderFooter();
@@ -3206,6 +3199,60 @@ Discus.View = Discus.View.extend({
 		}
 	},
 
+	// track el as part of this view even though it's not a child..
+	addElement: function(el) {
+		var self = this,
+			$el = $(el);
+
+		if ($el.length > 1) {
+			$el.each(function() {
+				self.addElement(this);
+			});
+		} else if ($el.length === 0) {
+			throw new Error("Invalid element!");
+		}
+
+		if (this.$el.closest($el).length) {
+			throw new Error("Element is a child of this view. This is only for unrelated elements");
+		}
+		if ($el.closest(this.$el).length) {
+			throw new Error("Element is an ancestor of this view! Reconsider how you're using this view.");
+		}
+
+		// normalize
+		el = $el.get(0);
+
+		if (!this._trackedElements) {
+			this._trackedElements = [];
+		}
+		_(this._trackedElements).each(function(otherEl) {
+			var $otherEl = $(otherEl);
+
+			if ($otherEl.closest($el).length) {
+				throw new Error("Element is a child of another tracked element. This will cause problems.");
+			}
+			if ($el.closest($otherEl).length) {
+				throw new Error("Element is an ancestor of another tracked element. This will cause problems.");
+			}
+		});
+		this._trackedElements.push(el);
+	},
+	lastElement: function() {
+		// get the lastmost element, for appending things after other views
+		var curEl = this.$el;
+
+		// should this recurse? I DONT KNOW!?!?!?
+		_(this._trackedElements).each(function(el) {
+			var $el = $(el);
+
+			if (curEl.nextAll().is($el)) {
+				curEl = $el;
+			}
+		});
+
+		return curEl;
+	},
+
 	clearTimeout: function(timerID) {
 		if (this.__timerIDS) {
 			this.__timerIDS = _(this.__timerIDS).without(timerID);
@@ -3415,6 +3462,9 @@ Discus.View = Discus.View.extend({
 			return;
 		}
 		this.$el.detach();
+		_(this._trackedElements).each(function(el) {
+			$(el).detach();
+		});
 	},
 	remove: function() {
 		var self = this,

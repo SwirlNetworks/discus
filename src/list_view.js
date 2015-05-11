@@ -217,9 +217,8 @@ Discus.ListView = Discus.View.extend({
 		var target = this.getRenderTarget();
 
 		// Start!
-		if (!this.options.renderAttached) {
-			this.detachDOM();
-		}
+		// renderAttached is handled within detach/attach dom...
+		this.detachDOM();
 
 		// tear everything down first..
 		target.empty();
@@ -240,10 +239,6 @@ Discus.ListView = Discus.View.extend({
 			this.sparse.holder.attr('class', 'list_view_slider ' + this.options.sparseClassName);
 		}
 
-		if (this.options.renderAttached) {
-			this.attachDOM();
-		}
-
 		if (this.isLoading()) {
 			this._d.loadingSpinnerShown = true;
 			this.renderLoading();
@@ -261,9 +256,7 @@ Discus.ListView = Discus.View.extend({
 			this.renderFooter();
 		}
 
-		if (!this.options.renderAttached) {
-			this.attachDOM();
-		}
+		this.attachDOM();
 
 		// Done!
 	},
@@ -332,7 +325,7 @@ Discus.ListView = Discus.View.extend({
 			return;
 		}
 
-		if (this.placeHolder.parent().length) {
+		if (this.placeHolder && this.placeHolder.parent().length) {
 			this.$el.insertAfter(this.placeHolder);
 		} else {
 			///TODO This case doesn't render properly!?
@@ -656,7 +649,7 @@ Discus.ListView = Discus.View.extend({
 							if (viewOffset === 0) {
 								_d.renderedViews[viewOffset].$el.prependTo(target);
 							} else {
-								_d.renderedViews[viewOffset].$el.insertAfter(_d.renderedViews[viewOffset-1].$el);
+								_d.renderedViews[viewOffset].$el.insertAfter(_d.renderedViews[viewOffset-1].lastElement());
 							}
 							// render is done below, so you don't need to here
 							return;
@@ -714,7 +707,7 @@ Discus.ListView = Discus.View.extend({
 					console.log("Completing canceled render...", viewOffset);
 				}
 				return;
-			}
+			}	
 			_d.isRendering = false;
 			self.removeFooter();
 			self.renderFooter();
