@@ -726,6 +726,7 @@ Discus.ListView = Discus.View.extend({
 		}
 		if (!lastView) {
 			this.getRenderTarget().empty();
+			this.renderHeader();
 			return;
 		}
 
