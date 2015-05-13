@@ -885,7 +885,7 @@ Discus.ListView = Discus.View.extend({
 
 		return sparse.holder;
 	},
-	handleScroll: function() {
+	handleScroll: ASYNC(function() {
 		if (!this.sparse.rowHeight) {
 			this.updateSparseSizing();
 		}
@@ -980,7 +980,7 @@ Discus.ListView = Discus.View.extend({
 
 			this.renderModels();
 		}
-	},
+	}),
 
 	resetSparsePosition: function() {
 		this.getRenderTarget().css({

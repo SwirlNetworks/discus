@@ -2156,7 +2156,7 @@ Discus.ListView = Discus.View.extend({
 
 		return sparse.holder;
 	},
-	handleScroll: function() {
+	handleScroll: ASYNC(function() {
 		if (!this.sparse.rowHeight) {
 			this.updateSparseSizing();
 		}
@@ -2251,7 +2251,7 @@ Discus.ListView = Discus.View.extend({
 
 			this.renderModels();
 		}
-	},
+	}),
 
 	resetSparsePosition: function() {
 		this.getRenderTarget().css({
@@ -3035,12 +3035,24 @@ var $ = _dereq_("jquery");
 
 var needsConfigureShim = Discus.VERSION_ARRAY[0] >= 1 && Discus.VERSION_ARRAY[1] >= 1;
 
+var viewByCID = {};
+
+Discus.viewByCID = function(cid) {
+	return viewByCID[cid] || null; // no undefined pls
+};
+
 Discus.View = function(options) {
 	if (needsConfigureShim) {
 		this.options = options;
 	}
 	Backbone.View.apply(this, arguments);
+	// setup cid
+	this.$el.attr({
+		'data-cid': this.cid
+	});
 	this.discusInitialize();
+
+	viewByCID[this.cid] = this;
 };
 Discus.View.prototype = Backbone.View.prototype;
 Discus.View.extend = Backbone.View.extend;
@@ -3362,7 +3374,7 @@ Discus.View = Discus.View.extend({
 		if (this.isRenderComplete) {
 			return true;
 		}
-		if ((!this.__readyPromise || this.__readyPromise.isResolved()) &&
+		if ((!this.__readyPromise || this.__readyPromise.state() === 'resolved') &&
 			_.all(this.__children, function(child) { return child._checkRenderComplete(); }))
 		{
 			this.isRenderComplete = true;
@@ -3412,9 +3424,16 @@ Discus.View = Discus.View.extend({
 	render: function() {
 		var data, state;
 
+		// ensure cid!.. prooooobably redundant
+		this.$el.attr({
+			'data-cid': this.cid
+		});
+
 		this.onBeforeRender();
 
 		data = this.getTemplateData();
+		this._templateData = data;
+
 		// even if we use custom data getter we still might need state data to decide which template to use
 		if (this.stateModel) {
 			state = this.stateModel.toJSON();
@@ -3483,6 +3502,7 @@ Discus.View = Discus.View.extend({
 		$(document).off('.' + cid);
 		$(window).off('.' + cid);
 		_(this.__timerIDS).each(clearTimeout);
+		delete viewByCID[cid];
 
 		this.undelegateEvents();
 		this.stopListening();
