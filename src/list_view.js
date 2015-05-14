@@ -1212,9 +1212,8 @@ Discus.ListView = Discus.View.extend({
 			return view;
 		}
 		if (!this.collection.contains(model)) {
-			if (this.collection.contains(model.id)) {
-				model = this.collection.get(model.id);
-			} else {
+			model = this.collection.get(model.id);
+			if (!model) {
 				return null;
 			}
 		}
