@@ -2483,7 +2483,11 @@ Discus.ListView = Discus.View.extend({
 			return view;
 		}
 		if (!this.collection.contains(model)) {
-			return null;
+			if (this.collection.contains(model.id)) {
+				model = this.collection.get(model.id);
+			} else {
+				return null;
+			}
 		}
 		if (this.options.sharedView) {
 			if (model.___list_view_shared_views[this.options.sharedView]) {
