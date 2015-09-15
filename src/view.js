@@ -349,7 +349,7 @@ Discus.View = Discus.View.extend({
 		// for jquery < 1.8
 		(this.__readyPromise.isResolved && this.__readyPromise.isResolved()) ||
 		// for jquery >= 1.8
-		this.__readyPromise.state && this.__readyPromise.state() == 'resolved') &&
+		(this.__readyPromise.state && this.__readyPromise.state() == 'resolved')) &&
 			_.all(this.__children, function(child) { return child._checkRenderComplete(); }))
 		{
 			this.isRenderComplete = true;
