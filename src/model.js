@@ -9,6 +9,14 @@ Discus.Model = function() {
 Discus.Model.prototype = Backbone.Model.prototype;
 Discus.Model.extend = Backbone.Model.extend;
 
+function _setObject(refArray, Obj, value){
+  if(refArray.length == 1){
+     Obj[refArray[0]] = value;
+  } else {
+    _setObject(refArray.slice(1,refArray.length), Obj[refArray[0]], value);
+  }
+}
+
 Discus.Model = Discus.Model.extend({
 	_super: _super,
 
@@ -27,6 +35,25 @@ Discus.Model = Discus.Model.extend({
 		return Backbone.Model.prototype.set.apply(this, arguments);
 	},
 
+  setSubProp: function(string, value, options){
+		var separator = options && options.separator || '.';
+		var refs = string.split(separator);
+		var prop = this.get(refs[0]);
+		_setObject(refs.slice(1,refs.length),prop, value);
+		if(options === undefined || (options && options.silent !== undefined && options.silent === false) || (options && options.silent === undefined)){
+			this.trigger('change:'+refs[0], this);
+		}
+	},
+
+  getSubProp: function(string, options){
+			var separator = options && options.separator || '.';
+			var refs = string.split(separator);
+			var topObj = this.get(refs[0]);
+			return refs.slice(1, refs.length).reduce(function(obj, i){
+				return obj[i];
+			}, topObj);
+		},
+
 	fetch: function() {
 		var res = Backbone.Model.prototype.fetch.apply(this, arguments);
 
@@ -35,7 +62,7 @@ Discus.Model = Discus.Model.extend({
 
 		return res;
 	},
-	
+
 	save: function() {
 		var res = Backbone.Model.prototype.save.apply(this, arguments);
 

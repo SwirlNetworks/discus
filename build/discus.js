@@ -1,5 +1,5 @@
 /*!
- * Copyright (c) 2015 Swirl
+ * Copyright (c) 2016 Swirl
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -1146,9 +1146,7 @@
 }());
 
 }).call(this,_dereq_("1YiZ5S"))
-},{"1YiZ5S":3}],2:[function(_dereq_,module,exports){
-
-},{}],3:[function(_dereq_,module,exports){
+},{"1YiZ5S":2}],2:[function(_dereq_,module,exports){
 // shim for using process in browser
 
 var process = module.exports = {};
@@ -1213,7 +1211,7 @@ process.chdir = function (dir) {
     throw new Error('process.chdir is not supported');
 };
 
-},{}],4:[function(_dereq_,module,exports){
+},{}],3:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 _dereq_('./model');
 var _super = _dereq_('./super');
@@ -1240,7 +1238,7 @@ Discus.Collection = Discus.Collection.extend({
 
 module.exports = Discus.Collection;
 
-},{"./discus":5,"./model":8,"./super":11}],5:[function(_dereq_,module,exports){
+},{"./discus":4,"./model":7,"./super":10,"backbone":"205lIr"}],4:[function(_dereq_,module,exports){
 var Backbone = _dereq_("backbone");
 var _ = _dereq_("underscore");
 
@@ -1268,7 +1266,7 @@ function CreateClone() {
 
 module.exports = CreateClone.apply(Backbone);
 
-},{}],6:[function(_dereq_,module,exports){
+},{"backbone":"205lIr","underscore":"h15NQi"}],5:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus'),
 	async = _dereq_('async'),
 	_ = _dereq_('underscore'),
@@ -2683,7 +2681,7 @@ Discus.ListView = Discus.View.extend({
 
 module.exports = Discus.ListView;
 
-},{"./discus":5,"./model":8,"./view":15,"async":1}],7:[function(_dereq_,module,exports){
+},{"./discus":4,"./model":7,"./view":14,"async":1,"jquery":"juYr6o","underscore":"h15NQi"}],6:[function(_dereq_,module,exports){
 _dereq_('./discus');
 _dereq_('./super');
 _dereq_('./object');
@@ -2696,7 +2694,7 @@ _dereq_('./table_view');
 
 module.exports = _dereq_('./discus');
 
-},{"./collection":4,"./discus":5,"./list_view":6,"./model":8,"./object":9,"./screen":10,"./super":11,"./table_view":14,"./view":15}],8:[function(_dereq_,module,exports){
+},{"./collection":3,"./discus":4,"./list_view":5,"./model":7,"./object":8,"./screen":9,"./super":10,"./table_view":13,"./view":14}],7:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var Backbone = _dereq_("backbone");
@@ -2707,6 +2705,14 @@ Discus.Model = function() {
 };
 Discus.Model.prototype = Backbone.Model.prototype;
 Discus.Model.extend = Backbone.Model.extend;
+
+function _setObject(refArray, Obj, value){
+  if(refArray.length == 1){
+     Obj[refArray[0]] = value;
+  } else {
+    _setObject(refArray.slice(1,refArray.length), Obj[refArray[0]], value);
+  }
+}
 
 Discus.Model = Discus.Model.extend({
 	_super: _super,
@@ -2726,6 +2732,25 @@ Discus.Model = Discus.Model.extend({
 		return Backbone.Model.prototype.set.apply(this, arguments);
 	},
 
+  setSubProp: function(string, value, options){
+		var separator = options && options.separator || '.';
+		var refs = string.split(separator);
+		var prop = this.get(refs[0]);
+		_setObject(refs.slice(1,refs.length),prop, value);
+		if(options === undefined || (options && options.silent !== undefined && options.silent === false) || (options && options.silent === undefined)){
+			this.trigger('change:'+refs[0], this);
+		}
+	},
+
+  getSubProp: function(string, options){
+			var separator = options && options.separator || '.';
+			var refs = string.split(separator);
+			var topObj = this.get(refs[0]);
+			return refs.slice(1, refs.length).reduce(function(obj, i){
+				return obj[i];
+			}, topObj);
+		},
+
 	fetch: function() {
 		var res = Backbone.Model.prototype.fetch.apply(this, arguments);
 
@@ -2734,7 +2759,7 @@ Discus.Model = Discus.Model.extend({
 
 		return res;
 	},
-	
+
 	save: function() {
 		var res = Backbone.Model.prototype.save.apply(this, arguments);
 
@@ -2784,7 +2809,7 @@ Discus.Model = Discus.Model.extend({
 
 module.exports = Discus.Model;
 
-},{"./discus":5,"./super":11}],9:[function(_dereq_,module,exports){
+},{"./discus":4,"./super":10,"backbone":"205lIr"}],8:[function(_dereq_,module,exports){
 var _ = _dereq_('underscore');
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
@@ -2810,7 +2835,7 @@ Discus.Object.extend = Discus.Model.extend;
 
 module.exports = Discus.Object;
 
-},{"./discus":5,"./super":11}],10:[function(_dereq_,module,exports){
+},{"./discus":4,"./super":10,"underscore":"h15NQi"}],9:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 _dereq_('./view'); // depends on view
 
@@ -2820,7 +2845,7 @@ Discus.Screen = Discus.View.extend({
 	}
 });
 
-},{"./discus":5,"./view":15}],11:[function(_dereq_,module,exports){
+},{"./discus":4,"./view":14}],10:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 
 // Find the next object up the prototype chain that has a
@@ -2868,7 +2893,7 @@ _dereq_('underscore').each(["Collection", "Router"], function(klass) {
 
 module.exports = _super;
 
-},{"./discus":5}],12:[function(_dereq_,module,exports){
+},{"./discus":4,"underscore":"h15NQi"}],11:[function(_dereq_,module,exports){
 var _ = _dereq_('underscore');
 var Discus = _dereq_('./discus');
 
@@ -2899,7 +2924,7 @@ Discus.TableEntry = Discus.View.extend({
 
 module.exports = Discus.TableEntry;
 
-},{"./discus":5}],13:[function(_dereq_,module,exports){
+},{"./discus":4,"underscore":"h15NQi"}],12:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var $ = _dereq_('jquery');
 var _ = _dereq_('underscore');
@@ -2944,7 +2969,7 @@ Discus.TableHeader = Discus.View.extend({
 
 module.exports = Discus.TableHeader;
 
-},{"./discus":5}],14:[function(_dereq_,module,exports){
+},{"./discus":4,"jquery":"juYr6o","underscore":"h15NQi"}],13:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var ListView = _dereq_('./list_view');
 var TableEntry = _dereq_('./table_entry');
@@ -3030,7 +3055,7 @@ Discus.TableView = ListView.extend({
 
 module.exports = Discus.TableView;
 
-},{"./discus":5,"./list_view":6,"./table_entry":12,"./table_header":13}],15:[function(_dereq_,module,exports){
+},{"./discus":4,"./list_view":5,"./table_entry":11,"./table_header":12,"jquery":"juYr6o","underscore":"h15NQi"}],14:[function(_dereq_,module,exports){
 var Discus = _dereq_('./discus');
 var _super = _dereq_('./super');
 var _ = _dereq_('underscore');
@@ -3573,6 +3598,6 @@ if (needsConfigureShim) {
 
 module.exports = Discus.View;
 
-},{"./discus":5,"./super":11}]},{},[7])
-(7)
+},{"./discus":4,"./super":10,"backbone":"205lIr","jquery":"juYr6o","underscore":"h15NQi"}]},{},[6])
+(6)
 });

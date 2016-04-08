@@ -1,6 +1,6 @@
 {
   "name": "discus",
-  "version": "0.10.0",
+  "version": "0.10.1",
   "description": "An extension to Backbone allowing more freedom to create complex single page webapps.",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -18,6 +18,10 @@
     "marionette"
   ],
   "author": "Chris Vickery <chrisinajar@gmail.com>",
+  "contributors": [{
+    "name": "John Maguire",
+    "email": "info@jonnie.io"
+  }],
   "organization": "Swirl",
   "license": "MIT",
   "bugs": {
